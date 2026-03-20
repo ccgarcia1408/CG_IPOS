@@ -1,12 +1,16 @@
 const UserModel = require("../models/user.model");
 const ApiError = require("../utils/ApiError");
+const bcrypt = require("bcrypt");
 
 const UserService = {
   async createUser(data) {
     const existingEmail = await UserModel.findByEmail(data.Email);
+    
     if (existingEmail) {
       throw new ApiError(409, "Email already exists");
     }
+
+    data.Password = await bcrypt.hash(data.Password, 10);
 
     const insertId = await UserModel.create(data);
     return await UserModel.findById(insertId);

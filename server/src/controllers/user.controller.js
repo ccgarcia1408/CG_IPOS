@@ -3,6 +3,7 @@ const ApiResponse = require("../utils/ApiResponse");
 const asyncHandler = require("../utils/asyncHandler");
 
 const createUser = asyncHandler(async (req, res) => {
+  // console.log("req.body:", req.body);
   const user = await UserService.createUser(req.body);
   res.status(201).json(new ApiResponse(201, "User created successfully", user));
 });
