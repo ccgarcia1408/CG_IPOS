@@ -13,7 +13,9 @@ export default function UserInfoCard() {
   const lastName = String(user?.LastName ?? "N/A");
   const email = String(user?.Email ?? "N/A");
   const phone = String(user?.ContactNo ?? "N/A");
-  const bio = String(user?.RoleId ?? "N/A");
+  const roleName = String(user?.RoleName ?? "N/A");
+  
+  // console.log("User Infos: ", user);
 
   return (
     <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
@@ -62,10 +64,10 @@ export default function UserInfoCard() {
 
             <div>
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Bio
+                Role
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {bio}
+                {roleName}
               </p>
             </div>
           </div>
@@ -130,8 +132,8 @@ export default function UserInfoCard() {
                   </div>
 
                   <div className="col-span-2">
-                    <Label>Bio</Label>
-                    <Input type="text" value={bio} disabled />
+                    <Label>Role</Label>
+                    <Input type="text" value={roleName} disabled />
                   </div>
                 </div>
               </div>

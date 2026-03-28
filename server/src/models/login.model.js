@@ -6,7 +6,7 @@ const LoginModel = {
         return rows[0][0] || null;
     },
 
-    async findUserInfo(username) {
+    async getUserInfo(username) {
         const [rows] = await pool.query(`CALL sp_users_getUserInfo(?)`, [username]);
         return rows[0][0] || null;
     }, 

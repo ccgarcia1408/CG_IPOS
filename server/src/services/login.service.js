@@ -7,7 +7,7 @@ const LoginService = {
     async login(username, password) {
         
         // FIND USER BY USERNAME
-        const user = await LoginModel.findUserInfo(username);
+        const user = await LoginModel.getUserInfo(username);
 
         if (!user) {
             throw new ApiError(401, "Invalid username or password");
@@ -31,6 +31,7 @@ const LoginService = {
             user: {
                 UserId: user.UserId,
                 RoleId: user.RoleId,
+                RoleName: user.RoleName,
                 EmployeeId: user.EmployeeId,
                 Username: user.Username,
                 Email: user.Email,

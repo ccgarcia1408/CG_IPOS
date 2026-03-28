@@ -45,7 +45,7 @@ export default function UserMetaCard() {
             </div>
 
             <div className="flex items-center order-2 gap-2 grow xl:order-3 xl:justify-end">
-              <a
+              {/* <a
                 href="https://www.facebook.com/PimjoHQ"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -127,7 +127,7 @@ export default function UserMetaCard() {
                     fill=""
                   />
                 </svg>
-              </a>
+              </a> */}
             </div>
           </div>
 
