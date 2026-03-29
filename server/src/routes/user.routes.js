@@ -7,11 +7,12 @@ const {
   createUserSchema,
   updateUserSchema
 } = require("../validations/user.validation");
+const authMiddleware = require("../middlewares/auth.middleware");
 
-router.post("/", validate(createUserSchema), userController.createUser);
-router.get("/", userController.getUsers);
-router.get("/:id", userController.getUserById);
-router.put("/:id", validate(updateUserSchema), userController.updateUser);
-router.delete("/:id", userController.deleteUser);
+router.post("/", validate(createUserSchema), authMiddleware, userController.createUser);
+router.get("/", authMiddleware, userController.getUsers);
+router.get("/:id", authMiddleware, userController.getUserById);
+router.put("/:id", validate(updateUserSchema), authMiddleware, userController.updateUser);
+router.delete("/:id", authMiddleware, userController.deleteUser);
 
 module.exports = router;

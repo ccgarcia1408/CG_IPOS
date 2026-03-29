@@ -114,7 +114,8 @@ const buildNavItems = (menus: Menu[]): NavItem[] => {
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
-  const { user } = useAuth();
+  // const { user } = useAuth();
+  const { user, token, isLoading: authLoading, isAuthenticated } = useAuth();
 
   const [menuItems, setMenuItems] = useState<NavItem[]>([]);
   const [openSubmenu, setOpenSubmenu] = useState<{
@@ -137,6 +138,9 @@ const AppSidebar: React.FC = () => {
   const roleId = useMemo(() => user?.RoleId ?? null, [user]);
 
   useEffect(() => {
+    if (authLoading) return;
+    if (!isAuthenticated || !token) return;
+
     const fetchMenus = async () => {
       try {
         setLoadingMenus(true);
@@ -153,12 +157,14 @@ const AppSidebar: React.FC = () => {
           endpoint = `/api/menus?RoleId=${encodeURIComponent(String(roleId))}`;
         }
 
+        console.log("token from localStorage:", localStorage.getItem("token"));
+        console.log("endpoint:", endpoint);
+
         const response = await api.get<ApiResponse<Menu[]>>(endpoint, {
           auth: true,
         });
 
         const menus = Array.isArray(response?.data) ? response.data : [];
-        // console.log("menus:", menus);
         const navItems = buildNavItems(menus);
 
         setMenuItems(navItems);
@@ -172,7 +178,50 @@ const AppSidebar: React.FC = () => {
     };
 
     fetchMenus();
-  }, [roleId]);
+  }, [roleId, authLoading, isAuthenticated, token]);
+
+  // useEffect(() => {
+  //   const fetchMenus = async () => {
+  //     try {
+  //       setLoadingMenus(true);
+  //       setMenuError("");
+
+  //       let endpoint = "/api/menus";
+
+  //       console.log("token from localStorage:", localStorage.getItem("token"));
+  //       console.log("user from localStorage:", localStorage.getItem("user"));
+  //       console.log("roleId:", roleId);
+  //       console.log("endpoint:", endpoint);
+
+  //       if (
+  //         roleId !== null &&
+  //         roleId !== undefined &&
+  //         String(roleId).trim() !== "" &&
+  //         Number(roleId) !== 1
+  //       ) {
+  //         endpoint = `/api/menus?RoleId=${encodeURIComponent(String(roleId))}`;
+  //       }
+
+  //       const response = await api.get<ApiResponse<Menu[]>>(endpoint, {
+  //         auth: true,
+  //       });
+
+  //       const menus = Array.isArray(response?.data) ? response.data : [];
+  //       // console.log("menus:", menus);
+  //       const navItems = buildNavItems(menus);
+
+  //       setMenuItems(navItems);
+  //     } catch (error) {
+  //       console.error("Failed to fetch menus:", error);
+  //       setMenuError("Failed to load menus.");
+  //       setMenuItems([]);
+  //     } finally {
+  //       setLoadingMenus(false);
+  //     }
+  //   };
+
+  //   fetchMenus();
+  // }, [roleId]);
 
   useEffect(() => {
     let submenuMatched = false;
@@ -425,7 +474,7 @@ const AppSidebar: React.FC = () => {
                 )}
               </h2>
 
-              {loadingMenus ? (
+              {authLoading || loadingMenus ? (
                 <div className="text-sm text-gray-400 px-2">Loading menus...</div>
               ) : (
                 renderMenuItems(menuItems)
