@@ -157,8 +157,8 @@ const AppSidebar: React.FC = () => {
           endpoint = `/api/menus?RoleId=${encodeURIComponent(String(roleId))}`;
         }
 
-        console.log("token from localStorage:", localStorage.getItem("token"));
-        console.log("endpoint:", endpoint);
+        // console.log("token from localStorage:", localStorage.getItem("token"));
+        // console.log("endpoint:", endpoint);
 
         const response = await api.get<ApiResponse<Menu[]>>(endpoint, {
           auth: true,

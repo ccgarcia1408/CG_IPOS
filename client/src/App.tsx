@@ -20,6 +20,8 @@ import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import UserMaintenance from "./pages/References/UserMaintenance";
+import CategoryMaintenance from "./pages/References/CategoryMaintenance";
 
 export default function App() {
   return (
@@ -37,6 +39,10 @@ export default function App() {
           >
           
             <Route path="/dashboard" element={<Home />} />
+
+            {/* User Maintenance */}
+            <Route path="/user-maintenance" element={<UserMaintenance />} />
+            <Route path="/category-maintenance" element={<CategoryMaintenance />} />
             
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />

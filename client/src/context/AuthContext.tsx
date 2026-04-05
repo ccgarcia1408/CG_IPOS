@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       const latestUser = response?.data ?? null;
-      console.log("Fetched current user:", latestUser);
+      // console.log("Fetched current user:", latestUser);
 
       if (!latestUser || Number(latestUser.IsActive) === 0) {
         logout();

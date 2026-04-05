@@ -46,6 +46,10 @@ const LoginService = {
             throw new ApiError(401, "Invalid username or password");
         }
 
+        if (user.IsAccountVerified === 0) {
+            throw new ApiError(403, "Your account is not yet verified.");
+        }
+
         if (user.IsActive === 0) {
             throw new ApiError(403, "Your account is inactive.");
         }
