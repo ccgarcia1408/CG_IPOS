@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router";
 import SignIn from "./pages/AuthPages/SignIn";
-import SignUp from "./pages/AuthPages/SignUp";
+// import SignUp from "./pages/AuthPages/SignUp";
 import ForgotPassword from "./pages/AuthPages/ForgotPassword";
 import NotFound from "./pages/OtherPage/NotFound";
 import UserProfiles from "./pages/UserProfiles";
@@ -22,6 +22,11 @@ import Home from "./pages/Dashboard/Home";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import UserMaintenance from "./pages/References/UserMaintenance";
 import CategoryMaintenance from "./pages/References/CategoryMaintenance";
+import BranchMaintenance from "./pages/References/BranchMaintenance";
+import PaymentMethodMaintenance from "./pages/References/PaymentMethodMaintenance";
+import SupplierMaintenance from "./pages/References/SupplierMaintenance";
+import TerminalMaintenance from "./pages/References/TerminalMaintenance";
+import Inventory from "./pages/Main/Inventory";
 
 export default function App() {
   return (
@@ -40,9 +45,16 @@ export default function App() {
           
             <Route path="/dashboard" element={<Home />} />
 
-            {/* User Maintenance */}
+            {/* Maintenance Page Links*/}
             <Route path="/user-maintenance" element={<UserMaintenance />} />
             <Route path="/category-maintenance" element={<CategoryMaintenance />} />
+            <Route path="/branch-maintenance" element={<BranchMaintenance />} />
+            <Route path="/payment-method-maintenance" element={<PaymentMethodMaintenance />} /> 
+            <Route path="/supplier-maintenance" element={<SupplierMaintenance />} /> 
+            <Route path="/terminal-maintenance" element={<TerminalMaintenance />} /> 
+
+            {/* Main Pages Links */}
+            <Route path="/inventory" element={<Inventory />} />  
             
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />
@@ -70,7 +82,7 @@ export default function App() {
 
           {/* Auth Layout */}
           <Route path="/login" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
+          {/* <Route path="/signup" element={<SignUp />} /> */}
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* Fallback Route */}
