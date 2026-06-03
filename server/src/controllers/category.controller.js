@@ -18,7 +18,17 @@ const getActiveCategories = asyncHandler(async (req, res) => {
     );
 });
 
+const getCategoryById = asyncHandler(async (req, res) => {
+    const { categoryId } = req.params;
+    const category = await CategoryService.getCategoryById(categoryId);
+
+    res.status(200).json(
+        new ApiResponse(200, "Category fetched successfully", category)
+    );
+});
+
 module.exports = {
     getCategories,
     getActiveCategories,
+    getCategoryById,
 };

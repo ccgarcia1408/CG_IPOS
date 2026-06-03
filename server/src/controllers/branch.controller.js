@@ -18,7 +18,17 @@ const getActiveBranches = asyncHandler(async (req, res) => {
     );
 });
 
+const getBranchById = asyncHandler(async (req, res) => {
+    const { branchId } = req.params;
+    const branch = await BranchService.getBranchById(branchId);
+
+    res.status(200).json(
+        new ApiResponse(200, "Branch fetched successfully", branch)
+    );
+});
+
 module.exports = {
     getBranches,
     getActiveBranches,
+    getBranchById,
 };
