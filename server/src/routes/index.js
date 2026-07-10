@@ -5,6 +5,7 @@ const userRoutes = require("./user.routes");
 const loginRoutes = require("./login.routes");
 const menuRoutes = require("./menu.routes");
 const meRoutes = require("./me.routes");
+const branchRoutes = require("./branch.routes");
 const terminalRoutes = require("./terminal.routes");
 
 router.use("/login", loginRoutes);
@@ -14,6 +15,8 @@ router.use("/users", userRoutes);
 router.use("/menus", menuRoutes);
 
 router.use("/auth", meRoutes);
+
+router.use("/branches", branchRoutes);
 
 router.use("/terminals", terminalRoutes);
 

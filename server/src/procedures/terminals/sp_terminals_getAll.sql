@@ -8,6 +8,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_terminals_getAll`()
 BEGIN
     SELECT
 	t.TerminalId,
+	t.BranchId,
 	t.Name,
 	t.Description,
 	t.IsDeleted,
