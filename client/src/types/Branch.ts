@@ -11,4 +11,6 @@ export interface Branch {
   Barangay: string;
   OtherAddress: string;
   IsActive: number;
+  CreatedAt: string;
+  UpdatedAt: string;
 }

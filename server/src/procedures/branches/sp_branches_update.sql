@@ -12,7 +12,6 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_branches_update`(
     IN p_IsActive TINYINT
 )
 BEGIN
-
     DECLARE v_OldValue JSON;
     DECLARE v_NewValue JSON;
 
@@ -25,60 +24,90 @@ BEGIN
             'Failed to update branch.' AS Message;
     END;
 
-    START TRANSACTION;
+    -- Check if branch exists
+    IF NOT EXISTS (
+        SELECT 1
+        FROM branches
+        WHERE BranchId = p_BranchId
+          AND IsDeleted = 0
+    ) THEN
 
-    -- OLD VALUE
-    SELECT JSON_OBJECT(
-        'Name', NAME,
-        'Description', Description,
-        'IsActive', IsActive
-    )
-    INTO v_OldValue
-    FROM branches
-    WHERE BranchId = p_BranchId;
+        SELECT
+            0 AS Success,
+            'Branch not found.' AS Message;
 
-    UPDATE branches
-    SET
-        NAME = p_Name,
-        Description = p_Description,
-        UpdatedAt = NOW(),
-        UpdatedBy = p_UpdatedBy,
-        IsActive = p_IsActive
-    WHERE BranchId = p_BranchId
-    AND IsDeleted = 0;
+    -- Check duplicate branch name (exclude current branch)
+    ELSEIF EXISTS (
+        SELECT 1
+        FROM branches
+        WHERE TRIM(Name) = TRIM(p_Name)
+          AND BranchId <> p_BranchId
+          AND IsDeleted = 0
+    ) THEN
 
-    -- NEW VALUE
-    SET v_NewValue = JSON_OBJECT(
-        'Name', p_Name,
-        'Description', p_Description,
-        'IsActive', p_IsActive
-    );
+        SELECT
+            0 AS Success,
+            'Branch name already exists.' AS Message;
 
-    -- AUDIT LOG
-    INSERT INTO audit_logs (
-        ActionType,
-        `Action`,
-        TableName,
-        RecordId,
-        OldValue,
-        NewValue,
-        CreatedBy
-    )
-    VALUES (
-        'UPDATE',
-        'Updated branch',
-        'branches',
-        p_BranchId,
-        v_OldValue,
-        v_NewValue,
-        p_UpdatedBy
-    );
+    ELSE
 
-    COMMIT;
+        START TRANSACTION;
 
-    SELECT
-        1 AS Success,
-        'Branch updated successfully.' AS Message;
+        -- Store old values
+        SELECT JSON_OBJECT(
+            'Name', Name,
+            'Description', Description,
+            'IsActive', IsActive
+        )
+        INTO v_OldValue
+        FROM branches
+        WHERE BranchId = p_BranchId;
+
+        -- Update branch
+        UPDATE branches
+        SET
+            Name = TRIM(p_Name),
+            Description = p_Description,
+            UpdatedAt = NOW(),
+            UpdatedBy = p_UpdatedBy,
+            IsActive = p_IsActive
+        WHERE BranchId = p_BranchId
+          AND IsDeleted = 0;
+
+        -- Store new values
+        SET v_NewValue = JSON_OBJECT(
+            'Name', TRIM(p_Name),
+            'Description', p_Description,
+            'IsActive', p_IsActive
+        );
+
+        -- Audit log
+        INSERT INTO audit_logs (
+            ActionType,
+            `Action`,
+            TableName,
+            RecordId,
+            OldValue,
+            NewValue,
+            CreatedBy
+        )
+        VALUES (
+            'UPDATE',
+            'Updated branch',
+            'branches',
+            p_BranchId,
+            v_OldValue,
+            v_NewValue,
+            p_UpdatedBy
+        );
+
+        COMMIT;
+
+        SELECT
+            1 AS Success,
+            'Branch updated successfully.' AS Message;
+
+    END IF;
 
 END$$
 

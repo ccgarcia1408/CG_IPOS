@@ -51,6 +51,31 @@ export default function BranchMaintenanceForm() {
     [branches]
   );
 
+  const latestThisMonth = useMemo(() => {
+    const now = new Date();
+
+    return branches
+      .filter((branch) => {
+        const created = new Date(branch.CreatedAt);
+
+        return (
+          created.getMonth() === now.getMonth() &&
+          created.getFullYear() === now.getFullYear()
+        );
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.CreatedAt).getTime() -
+          new Date(a.CreatedAt).getTime()
+      )
+      .slice(0, 5);
+  }, [branches]);
+
+  const latestThisMonthCount = useMemo(
+    () => latestThisMonth.length,
+    [latestThisMonth]
+  );
+
   return (
     <div className="space-y-5">
       {/* Page Header */}
@@ -88,7 +113,7 @@ export default function BranchMaintenanceForm() {
 
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]">
           <p className="text-sm text-gray-500">New This Month</p>
-          <h3 className="mt-2 text-2xl font-bold text-blue-600">5</h3>
+          <h3 className="mt-2 text-2xl font-bold text-blue-600">{latestThisMonthCount}</h3>
         </div>
       </div>
 
