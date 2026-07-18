@@ -7,5 +7,6 @@ router.get("/", authMiddleware, branchController.getBranches);
 router.get("/active", authMiddleware, branchController.getActiveBranches);
 router.post("/", authMiddleware, branchController.createBranch);
 router.put("/:branchId", authMiddleware, branchController.updateBranch);
+router.delete("/:branchId", authMiddleware, branchController.deleteBranch);
 
 module.exports = router;

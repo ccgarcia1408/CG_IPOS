@@ -62,10 +62,28 @@ const updateBranch = asyncHandler(async (req, res) => {
     );
 });
 
+const deleteBranch = asyncHandler(async (req, res) => {
+    const { branchId } = req.params;
+
+    const result = await BranchService.deleteBranch(
+        branchId,
+        req.user.UserId
+    );
+
+    res.status(200).json(
+        new ApiResponse(
+            200,
+            result.Message,
+            null
+        )
+    );
+});
+
 module.exports = {
     getBranches,
     getActiveBranches,
     getBranchById,
     createBranch,
-    updateBranch
+    updateBranch,
+    deleteBranch
 };

@@ -39,6 +39,18 @@ const BranchModel = {
 
         return rows[0][0];
     },
+
+    async delete(branchId, userId) {
+        const [rows] = await pool.query(
+            `CALL sp_branches_delete(?, ?)`,
+            [
+                branchId,
+                userId
+            ]
+        );
+
+        return rows[0][0];
+    },
 };
 
 module.exports = BranchModel;

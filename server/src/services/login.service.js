@@ -57,7 +57,7 @@ const LoginService = {
         await LoginModel.updateLastLogin(username);
 
         const token = jwt.sign(
-            { id: user.UserId },
+            { UserId: user.UserId },
             process.env.JWT_SECRET,
             { expiresIn: "1h" }
         );
