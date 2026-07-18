@@ -47,16 +47,18 @@ const BranchService = {
             IsActive
         } = data;
 
-        if (!Name || !Name.trim()) {
-            throw new ApiError(400, "Branch name is required.");
+        const existingBranch = await BranchModel.findById(branchId);
+
+        if (!existingBranch) {
+            throw new ApiError(404, "Branch not found");
         }
 
         const result = await BranchModel.update(
             branchId,
-            Name,
-            Description ?? null,
+            Name ?? existingBranch.Name,
+            Description ?? existingBranch.Description,
             userId,
-            IsActive
+            IsActive ?? existingBranch.IsActive
         );
 
         if (!result.Success) {
@@ -65,6 +67,20 @@ const BranchService = {
 
         return result;
     },
+
+    async deleteBranch(branchId, userId) {
+        const result = await BranchModel.delete(
+            branchId,
+            userId
+        );          
+
+        if (!result.Success) {
+            throw new ApiError(400, result.Message);
+        }
+
+        return result;
+    }
+
 };
 
 module.exports = BranchService;
