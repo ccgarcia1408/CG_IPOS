@@ -8,6 +8,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_branches_update`(
     IN p_BranchId INT,
     IN p_Name VARCHAR(255),
     IN p_Description TEXT,
+    IN p_ContactNo VARCHAR(30),
+    IN p_ProvinceId INT,
+    IN p_MunicipalityId INT,
+    IN p_BarangayId INT,
     IN p_UpdatedBy INT,
     IN p_IsActive TINYINT
 )
@@ -40,7 +44,7 @@ BEGIN
     ELSEIF EXISTS (
         SELECT 1
         FROM branches
-        WHERE TRIM(Name) = TRIM(p_Name)
+        WHERE TRIM(NAME) = TRIM(p_Name)
           AND BranchId <> p_BranchId
           AND IsDeleted = 0
     ) THEN
@@ -55,8 +59,12 @@ BEGIN
 
         -- Store old values
         SELECT JSON_OBJECT(
-            'Name', Name,
+            'Name', NAME,
             'Description', Description,
+            'ContactNo', ContactNo,
+	    'ProvinceId', ProvinceId,
+	    'MunicipalityId', MunicipalityId,
+	    'BarangayId', BarangayId,
             'IsActive', IsActive
         )
         INTO v_OldValue
@@ -66,8 +74,12 @@ BEGIN
         -- Update branch
         UPDATE branches
         SET
-            Name = TRIM(p_Name),
+            NAME = TRIM(p_Name),
             Description = p_Description,
+            ContactNo = p_ContactNo,
+            ProvinceId = p_ProvinceId,
+            MunicipalityId = p_MunicipalityId,
+            BarangayId = p_BarangayId,
             UpdatedAt = NOW(),
             UpdatedBy = p_UpdatedBy,
             IsActive = p_IsActive
@@ -78,6 +90,10 @@ BEGIN
         SET v_NewValue = JSON_OBJECT(
             'Name', TRIM(p_Name),
             'Description', p_Description,
+            'ContactNo', p_ContactNo,
+            'ProvinceId', p_ProvinceId,
+            'MunicipalityId', p_MunicipalityId,
+            'BarangayId', p_BarangayId,
             'IsActive', p_IsActive
         );
 

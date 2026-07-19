@@ -4,6 +4,7 @@ const branchController = require("../controllers/branch.controller");
 const authMiddleware = require("../middlewares/auth.middleware");
 
 router.get("/", authMiddleware, branchController.getBranches);
+router.get("/:branchId", authMiddleware, branchController.getBranchById);
 router.get("/active", authMiddleware, branchController.getActiveBranches);
 router.post("/", authMiddleware, branchController.createBranch);
 router.put("/:branchId", authMiddleware, branchController.updateBranch);
