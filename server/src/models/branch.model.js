@@ -16,22 +16,26 @@ const BranchModel = {
         return rows[0][0] || null;
     },
 
-    async create(name, description, createdBy) {
+    async create(name, description, contactNo, provinceId, municipalityId, barangayId, createdBy) {
         const [rows] = await pool.query(
-            `CALL sp_branches_create(?, ?, ?)`,
-            [name, description, createdBy]
+            `CALL sp_branches_create(?, ?, ?, ?, ?, ?, ?)`,
+            [name, description, contactNo, provinceId, municipalityId, barangayId, createdBy]
         );
 
         return rows[0][0];
     },
 
-    async update(branchId, name, description, updatedBy, isActive) {
+    async update(branchId, name, description, contactNo, provinceId, municipalityId, barangayId, updatedBy, isActive) {
         const [rows] = await pool.query(
-            `CALL sp_branches_update(?, ?, ?, ?, ?)`,
+            `CALL sp_branches_update(?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 branchId,
                 name,
                 description,
+                contactNo,
+                provinceId,
+                municipalityId,
+                barangayId,
                 updatedBy,
                 isActive
             ]

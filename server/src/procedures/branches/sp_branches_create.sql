@@ -7,6 +7,10 @@ DROP PROCEDURE IF EXISTS `sp_branches_create`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_branches_create`(
     IN p_Name VARCHAR(255),
     IN p_Description TEXT,
+    IN p_ContactNo VARCHAR(30),
+    IN p_ProvinceId INT,
+    IN p_MunicipalityId INT,
+    IN p_BarangayId INT,
     IN p_CreatedBy INT
 )
 BEGIN
@@ -26,7 +30,7 @@ BEGIN
     IF EXISTS (
         SELECT 1
         FROM branches
-        WHERE TRIM(Name) = TRIM(p_Name)
+        WHERE TRIM(NAME) = TRIM(p_Name)
           AND IsDeleted = 0
     ) THEN
 
@@ -40,8 +44,12 @@ BEGIN
         START TRANSACTION;
 
         INSERT INTO branches (
-            Name,
+            NAME,
             Description,
+            ContactNo,
+            ProvinceId,
+            MunicipalityId,
+            BarangayId,
             IsDeleted,
             CreatedAt,
             CreatedBy,
@@ -50,6 +58,10 @@ BEGIN
         VALUES (
             TRIM(p_Name),
             p_Description,
+            p_ContactNo,
+            p_ProvinceId,
+            p_MunicipalityId,
+            p_BarangayId,
             0,
             NOW(),
             p_CreatedBy,
@@ -77,6 +89,10 @@ BEGIN
             JSON_OBJECT(
                 'Name', TRIM(p_Name),
                 'Description', p_Description,
+                'ContactNo', p_ContactNo,
+                'ProvinceId', p_ProvinceId,
+                'MunicipalityId', p_MunicipalityId,
+                'BarangayId', p_BarangayId,
                 'IsActive', 1
             ),
             p_CreatedBy
