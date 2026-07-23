@@ -27,10 +27,12 @@ import PaymentMethodMaintenance from "./pages/References/PaymentMethodMaintenanc
 import SupplierMaintenance from "./pages/References/SupplierMaintenance";
 import TerminalMaintenance from "./pages/References/TerminalMaintenance";
 import Inventory from "./pages/Main/Inventory";
+import { Toaster } from "sonner";
 
 export default function App() {
   return (
     <>
+      <Toaster richColors position="top-right" visibleToasts={3} closeButton/>
       <Router>
         <ScrollToTop />
         <Routes>

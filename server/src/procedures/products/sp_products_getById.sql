@@ -4,12 +4,11 @@ USE `cg_ipos_db`$$
 
 DROP PROCEDURE IF EXISTS `sp_products_getById`$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_products_getById`(
-	IN p_ProductId INT
-)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_products_getById`(IN `p_ProductId` INT)
 BEGIN
     SELECT
 	p.ProductId,
+	p.BranchId,
 	p.CategoryId,
 	p.Name,
 	p.Description,

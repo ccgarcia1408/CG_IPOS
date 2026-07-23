@@ -5,3 +5,8 @@ import { api } from "./api";
 export async function login(payload: LoginRequest): Promise<LoginResponse> {
   return await api.post<LoginResponse>("/api/login", payload);
 }
+
+// export async function login(payload: LoginRequest): Promise<LoginResponse> {
+//   const response = await api.post<LoginResponse>("/api/login", payload);
+//   return response.data;
+// }
