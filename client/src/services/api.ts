@@ -1,12 +1,46 @@
+// export class ApiError extends Error {
+//   status: number;
+//   data: unknown;
+
+//   constructor(message: string, status: number, data: unknown = null) {
+//     super(message);
+//     this.name = "ApiError";
+//     this.status = status;
+//     this.data = data;
+//   }
+// }
+
+// THIS MUST USE
+
+// export class ApiError<T = unknown> extends Error {
+//   status: number;
+//   data: T;
+
+//   constructor(message: string, status: number, data: T) {
+//     super(message);
+
+//     this.name = "ApiError";
+//     this.status = status;
+//     this.data = data;
+
+//     // Recommended when extending Error
+//     Object.setPrototypeOf(this, ApiError.prototype);
+//   }
+// }
+
+// SIMPLIER API ERROR CLASS
 export class ApiError extends Error {
   status: number;
   data: unknown;
 
   constructor(message: string, status: number, data: unknown = null) {
     super(message);
+
     this.name = "ApiError";
     this.status = status;
     this.data = data;
+
+    Object.setPrototypeOf(this, ApiError.prototype);
   }
 }
 

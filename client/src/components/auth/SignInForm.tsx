@@ -1,4 +1,5 @@
 // import { useState } from "react";
+import { ApiError } from "../../services/api";
 import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { EyeCloseIcon, EyeIcon } from "../../icons";
@@ -7,6 +8,7 @@ import Input from "../form/input/InputField";
 import Button from "../ui/button/Button";
 import { login as loginRequest } from "../../services/auth";
 import { useAuth } from "../../context/AuthContext";
+import { toast } from "sonner";
 
 export default function SignInForm() {
   const navigate = useNavigate();
@@ -17,19 +19,25 @@ export default function SignInForm() {
   const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError("");
+
+    if (loading) return;
+
+    setLoading(true);
 
     if (!username.trim()) {
-      setError("Username is required.");
+      toast.error("Username is required.", {
+        id: "login-error",
+      });
       return;
     }
 
     if (!password.trim()) {
-      setError("Password is required.");
+      toast.error("Password is required.", {
+        id: "login-error",
+      });
       return;
     }
 
@@ -39,6 +47,10 @@ export default function SignInForm() {
       const result = await loginRequest({
         Username: username.trim(),
         Password: password,
+      });
+
+      toast.success("Login successful!", {
+        id: "login-success",
       });
 
       const token = result?.token || result?.data?.token;
@@ -51,12 +63,28 @@ export default function SignInForm() {
       login({ token, user });
 
       navigate("/dashboard", { replace: true });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed.");
+    } catch (error: unknown) {
+      if (error instanceof ApiError) {
+        toast.error(error.message, {
+          id: "login-error",
+        });
+        return;
+      }
+
+      if (error instanceof Error) {
+        toast.error(error.message, {
+          id: "login-error",
+        });
+        return;
+      }
+
+      toast.error("Something went wrong.", {
+        id: "login-error",
+      });
     } finally {
       setLoading(false);
-    }
-  };
+    };
+  }
 
   return (
     <div className="flex flex-col flex-1">
@@ -74,11 +102,6 @@ export default function SignInForm() {
           <div>
             <form onSubmit={handleSubmit}>
               <div className="space-y-6">
-                {error && (
-                  <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-                    {error}
-                  </div>
-                )}
 
                 <div>
                   <Label>

@@ -7,6 +7,7 @@ const menuRoutes = require("./menu.routes");
 const meRoutes = require("./me.routes");
 const branchRoutes = require("./branch.routes");
 const terminalRoutes = require("./terminal.routes");
+const productRoutes = require("./product.routes");
 
 router.use("/login", loginRoutes);
 
@@ -19,5 +20,7 @@ router.use("/auth", meRoutes);
 router.use("/branches", branchRoutes);
 
 router.use("/terminals", terminalRoutes);
+
+router.use("/products", productRoutes);
 
 module.exports = router;
