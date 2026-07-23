@@ -11,11 +11,33 @@ import Badge from "../ui/badge/Badge";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../../services/api";
 import { Branch } from "../../types/Branch";
+import { Province } from "../../types/Province";
+import { Municipality } from "../../types/Municipality";
+import { Barangay } from "../../types/Barangay";
+import Modal from "../ui/modal/Modal";
 
 export default function BranchMaintenanceForm() {
   const [branches, setBranches] = useState<Branch[]>([]);
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [municipalities, setMunicipalities] = useState<Municipality[]>([]);
+  const [barangays, setBarangays] = useState<Barangay[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Modal States
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
+  const [deletingBranch, setDeletingBranch] = useState<Branch | null>(null);
+
+  const [form, setForm] = useState({
+    Name: "",
+    Description: "",
+    ContactNo: "",
+    ProvinceId: "",
+    MunicipalityId: "",
+    BarangayId: "",
+    OtherAddress: "",
+  });
 
   // Search
   const [search, setSearch] = useState("");
@@ -26,7 +48,20 @@ export default function BranchMaintenanceForm() {
 
   useEffect(() => {
     loadBranches();
-  }, []);
+    loadProvinces();
+
+    if (form.ProvinceId) {
+      loadMunicipalities(form.ProvinceId);
+    } else {
+      setMunicipalities([]);
+    }
+
+    if (form.MunicipalityId) {
+      loadBarangays(form.MunicipalityId);
+    } else {
+      setBarangays([]);
+    }
+  }, [form.ProvinceId, form.MunicipalityId]);
 
   const loadBranches = async () => {
     try {
@@ -45,6 +80,66 @@ export default function BranchMaintenanceForm() {
       setError(err.message || "Failed to load branches.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadProvinces = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await api.get<{
+        success: boolean;
+        data: Province[];
+      }>("/api/provinces/active", {
+        auth: true,
+      });
+
+      setProvinces(response.data ?? []);
+    } catch (err: any) {
+      setError(err.message || "Failed to load provinces.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadMunicipalities = async (provinceId: string) => {
+    if (!provinceId) {
+      setMunicipalities([]);
+      return;
+    }
+
+    try {
+      const response = await api.get<{
+        success: boolean;
+        data: Municipality[];
+      }>(`/api/municipalities/province/${provinceId}`, {
+        auth: true,
+      });
+
+      setMunicipalities(response.data ?? []);
+    } catch (err: any) {
+      setError(err.message || "Failed to load municipalities.");
+    }
+  };
+
+  const loadBarangays = async (municipalityId: string) => {
+    if (!municipalityId) {
+      setBarangays([]);
+      return;
+    }
+
+    try {
+      const response = await api.get<{
+        success: boolean;
+        data: Barangay[];
+      }>(`/api/barangays/municipality/${municipalityId}`, {
+        auth: true,
+      });
+
+      setBarangays(response.data ?? []);
+    } catch (err: any) {
+      setError(err.message || "Failed to load barangays.");
     }
   };
 
@@ -142,6 +237,7 @@ export default function BranchMaintenanceForm() {
 
   return (
   <div className="space-y-5">
+
     {/* Page Header */}
     <div className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03] md:flex-row md:items-center md:justify-between">
       <div>
@@ -153,7 +249,7 @@ export default function BranchMaintenanceForm() {
         </p>
       </div>
 
-      <button className="inline-flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-600">
+      <button onClick={() => setIsAddOpen(true)} className="inline-flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-600">
         + Add Branch
       </button>
     </div>
@@ -419,6 +515,179 @@ export default function BranchMaintenanceForm() {
         </div>
       </div>
     )}
+
+    <Modal
+      isOpen={isAddOpen}
+      title="Add Branch"
+      onClose={() => setIsAddOpen(false)}
+      // onConfirm={handleAddBranch}
+      confirmText="Save Branch"
+      width="lg"
+    >
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+
+          {/* Branch Code */}
+          <div>
+              <label className="mb-2 block text-sm font-medium">
+                  Branch Code
+              </label>
+
+              <input
+                  className="w-full rounded-lg border px-4 py-2"
+                  value={form.Name}
+                  onChange={(e) =>
+                      setForm({
+                          ...form,
+                          Name: e.target.value,
+                      })
+                  }
+              />
+          </div>
+
+          {/* Branch Name */}
+          <div>
+              <label className="mb-2 block text-sm font-medium">
+                  Branch Name
+              </label>
+
+              <input
+                  className="w-full rounded-lg border px-4 py-2"
+                  value={form.Description}
+                  onChange={(e) =>
+                      setForm({
+                          ...form,
+                          Description: e.target.value,
+                      })
+                  }
+              />
+          </div>
+
+          {/* Contact */}
+          <div>
+              <label className="mb-2 block text-sm font-medium">
+                  Contact Number
+              </label>
+
+              <input
+                  className="w-full rounded-lg border px-4 py-2"
+                  value={form.ContactNo}
+                  onChange={(e) =>
+                      setForm({
+                          ...form,
+                          ContactNo: e.target.value,
+                      })
+                  }
+              />
+          </div>
+
+          {/* Province */}
+          <div>
+              <label className="mb-2 block text-sm font-medium">
+                  Province
+              </label>
+
+              <select
+                  className="w-full rounded-lg border px-4 py-2"
+                  value={form.ProvinceId}
+                  onChange={(e) =>
+                      setForm({
+                          ...form,
+                          ProvinceId: e.target.value,
+                      })
+                  }
+              >
+                  <option value="">Select Province</option>
+
+                  {provinces.map((province) => (
+                      <option
+                          key={province.ProvinceId}
+                          value={province.ProvinceId}
+                      >
+                          {province.Name}
+                      </option>
+                  ))}
+              </select>
+          </div>
+
+          {/* Municipality */}
+          <div>
+              <label className="mb-2 block text-sm font-medium">
+                  Municipality
+              </label>
+
+              <select
+                  className="w-full rounded-lg border px-4 py-2"
+                  value={form.MunicipalityId}
+                  onChange={(e) =>
+                      setForm({
+                          ...form,
+                          MunicipalityId: e.target.value,
+                      })
+                  }
+              >
+                  <option value="">Select Municipality</option>
+
+                  {municipalities.map((municipality) => (
+                      <option
+                          key={municipality.MunicipalityId}
+                          value={municipality.MunicipalityId}
+                      >
+                          {municipality.Name}
+                      </option>
+                  ))}
+              </select>
+          </div>
+
+          {/* Barangay */}
+          <div>
+              <label className="mb-2 block text-sm font-medium">
+                  Barangay
+              </label>
+
+              <select
+                  className="w-full rounded-lg border px-4 py-2"
+                  value={form.BarangayId}
+                  onChange={(e) =>
+                      setForm({
+                          ...form,
+                          BarangayId: e.target.value,
+                      })
+                  }
+              >
+                  <option value="">Select Barangay</option>
+
+                  {barangays.map((barangay) => (
+                      <option
+                          key={barangay.BarangayId}
+                          value={barangay.BarangayId}
+                      >
+                          {barangay.Name}
+                      </option>
+                  ))}
+              </select>
+          </div>
+
+          {/* Other Address */}
+          <div className="md:col-span-2">
+              <label className="mb-2 block text-sm font-medium">
+                  Other Address
+              </label>
+
+              <textarea
+                  rows={3}
+                  className="w-full rounded-lg border px-4 py-2"
+                  value={form.OtherAddress}
+                  onChange={(e) =>
+                      setForm({
+                          ...form,
+                          OtherAddress: e.target.value,
+                      })
+                  }
+              />
+          </div>
+
+      </div>
+    </Modal>
 
   </div>
 );
