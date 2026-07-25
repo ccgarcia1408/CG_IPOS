@@ -4,7 +4,21 @@ USE `cg_ipos_db`$$
 
 DROP PROCEDURE IF EXISTS `sp_products_create`$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_products_create`(IN `p_BranchId` INT, IN `p_CategoryId` INT, IN `p_Name` VARCHAR(255), IN `p_Description` TEXT, IN `p_Barcode` VARCHAR(255), IN `p_CostPrice` DECIMAL(18,2), IN `p_SellingPrice` DECIMAL(18,2), IN `p_Stock` INT, IN `p_MinimumStock` INT, IN `p_ImagePath` TEXT, IN `p_CreatedBy` INT)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_products_create`(
+	IN `p_BranchId` INT, 
+	IN `p_CategoryId` INT, 
+	IN `p_Name` VARCHAR(255), 
+	IN `p_Description` TEXT, 
+	IN `p_Barcode` VARCHAR(255), 
+	IN `p_CostPrice` DECIMAL(18,2), 
+	IN `p_SellingPrice` DECIMAL(18,2), 
+	IN `p_Stock` INT, 
+	IN `p_MinimumStock` INT,
+	IN `p_ManufacturingDate` DATE,
+	IN `p_ExpiryDate` DATE,
+	IN `p_ImagePath` TEXT, 
+	IN `p_CreatedBy` INT
+)
 BEGIN
     DECLARE v_ProductId INT;
     
@@ -27,14 +41,15 @@ BEGIN
 
         SELECT
             0 AS Success,
-            'Branch name already exists.' AS Message,
-            NULL AS BranchId;
+            'Product name already exists in that branch.' AS Message,
+            NULL AS ProductId;
 
 	ELSE
     
 	START TRANSACTION;
 
-    INSERT INTO products (
+    INSERT INTO products 
+	(
 		BranchId,
 		CategoryId,
 		`Name`,
@@ -44,10 +59,12 @@ BEGIN
 		SellingPrice,
 		Stock,
 		MinimumStock,
+		ManufacturingDate,
+		ExpiryDate,
 		ImagePath,
 		CreatedBy,
 		IsActive
-	    )
+	)
     VALUES (
 		p_BranchId,
 		p_CategoryId,
@@ -58,6 +75,8 @@ BEGIN
 		p_SellingPrice,
 		p_Stock,
 		p_MinimumStock,
+		p_ManufacturingDate,
+		p_ExpiryDate,
 		p_ImagePath,
 		p_CreatedBy,
 		1
@@ -91,11 +110,14 @@ BEGIN
 		    'SellingPrice', p_SellingPrice,
 		    'Stock', p_Stock,
 		    'MinimumStock', p_MinimumStock,
+			'ManufacturingDate', p_ManufacturingDate,
+			'ExpiryDate', p_ExpiryDate,
 		    'ImagePath', p_ImagePath,
 		    'IsActive', 1
 		),
 		p_CreatedBy
     );
+	
     COMMIT;
 
     SELECT

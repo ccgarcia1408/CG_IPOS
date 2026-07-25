@@ -24,6 +24,7 @@ BEGIN
     WHERE m.IsDeleted = 0
     AND m.IsActive = 1
     AND m.ProvinceId = p_ProvinceId
+	ORDER BY m.Name
     ;
 END$$
 

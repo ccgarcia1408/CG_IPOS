@@ -21,7 +21,20 @@ const ProductService = {
     },
 
     async createProduct(data, userId) {
-        const { BranchId, CategoryId, Name, Description, Barcode, CostPrice, SellingPrice, Stock, MinimumStock, ImagePath } = data;
+        const { 
+            BranchId, 
+            CategoryId, 
+            Name, 
+            Description, 
+            Barcode, 
+            CostPrice, 
+            SellingPrice, 
+            Stock, 
+            MinimumStock, 
+            ManufacturingDate, 
+            ExpiryDate, 
+            ImagePath 
+        } = data;
 
         if (!Name) {
             throw new ApiError(400, "Product name is required.");
@@ -37,6 +50,8 @@ const ProductService = {
             SellingPrice ?? null,
             Stock ?? null,
             MinimumStock ?? null,
+            ManufacturingDate ?? null,
+            ExpiryDate ?? null,
             ImagePath ?? null,
             userId
         );
@@ -61,6 +76,8 @@ const ProductService = {
             SellingPrice,
             Stock,
             MinimumStock,
+            ManufacturingDate,
+            ExpiryDate,
             ImagePath,
             IsActive
         } = data;
@@ -82,6 +99,8 @@ const ProductService = {
             SellingPrice ?? existingProduct.SellingPrice,
             Stock ?? existingProduct.Stock,
             MinimumStock ?? existingProduct.MinimumStock,
+            ManufacturingDate ?? existingProduct.ManufacturingDate,
+            ExpiryDate ?? existingProduct.ExpiryDate,
             ImagePath ?? existingProduct.ImagePath,
             userId,
             IsActive ?? existingProduct.IsActive

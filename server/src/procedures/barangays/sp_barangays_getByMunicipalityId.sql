@@ -24,6 +24,7 @@ BEGIN
     WHERE b.IsDeleted = 0
     AND b.IsActive = 1
     AND b.MunicipalityId = p_MunicipalityId
+	ORDER BY b.Name
     ;
 END$$
 
