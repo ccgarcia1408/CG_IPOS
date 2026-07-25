@@ -100,9 +100,13 @@ export default function Modal({
             </button>
 
             <button
+              type="button"
               onClick={onConfirm}
               disabled={loading}
-              className={`rounded-lg px-4 py-2 text-white ${buttonColor[confirmColor]}`}
+              className={`rounded-lg px-4 py-2 font-medium text-white transition
+                disabled:cursor-not-allowed
+                disabled:opacity-60
+                ${buttonColor[confirmColor]}`}
             >
               {loading ? "Please wait..." : confirmText}
             </button>

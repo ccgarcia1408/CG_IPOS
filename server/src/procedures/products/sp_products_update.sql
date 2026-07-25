@@ -4,7 +4,23 @@ USE `cg_ipos_db`$$
 
 DROP PROCEDURE IF EXISTS `sp_products_update`$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_products_update`(IN `p_ProductId` INT, IN `p_BranchId` INT, IN `p_CategoryId` INT, IN `p_Name` VARCHAR(255), IN `p_Description` TEXT, IN `p_Barcode` VARCHAR(255), IN `p_CostPrice` DECIMAL(18,2), IN `p_SellingPrice` DECIMAL(18,2), IN `p_Stock` INT, IN `p_MinimumStock` INT, IN `p_ImagePath` TEXT, IN `p_UpdatedBy` INT, IN `p_IsActive` TINYINT)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_products_update`(
+    IN `p_ProductId` INT, 
+    IN `p_BranchId` INT, 
+    IN `p_CategoryId` INT, 
+    IN `p_Name` VARCHAR(255), 
+    IN `p_Description` TEXT, 
+    IN `p_Barcode` VARCHAR(255), 
+    IN `p_CostPrice` DECIMAL(18,2), 
+    IN `p_SellingPrice` DECIMAL(18,2), 
+    IN `p_Stock` INT, 
+    IN `p_MinimumStock` INT,
+    IN `p_ManufacturingDate` DATE,
+    IN `p_ExpiryDate` DATE,
+    IN `p_ImagePath` TEXT, 
+    IN `p_UpdatedBy` INT, 
+    IN `p_IsActive` TINYINT
+)
 BEGIN
     DECLARE v_OldValue JSON;
     DECLARE v_NewValue JSON;
@@ -28,7 +44,7 @@ BEGIN
 
         SELECT
             0 AS Success,
-            'Product not found. (ERROR FROM DB)' AS Message;
+            'Product not found.' AS Message;
     
     -- CHECK DUPLICATE PRODUCT NAME IN A BRANCH (EXCLUDE CURRENT PRODUCT)
     ELSEIF EXISTS (
@@ -60,6 +76,8 @@ BEGIN
             'SellingPrice', SellingPrice,
             'Stock', Stock,
             'MinimumStock', MinimumStock,
+            'ManufacturingDate', ManufacturingDate,
+            'ExpiryDate', ExpiryDate,
             'ImagePath', ImagePath,
             'IsActive', IsActive
         )
@@ -79,6 +97,8 @@ BEGIN
             SellingPrice = p_SellingPrice,
             Stock = p_Stock,
             MinimumStock = p_MinimumStock,
+            ManufacturingDate = p_ManufacturingDate,
+            ExpiryDate = p_ExpiryDate,
             ImagePath = p_ImagePath,
             UpdatedAt = NOW(),
             UpdatedBy = p_UpdatedBy,
@@ -97,6 +117,8 @@ BEGIN
             'SellingPrice', p_SellingPrice,
             'Stock', p_Stock,
             'MinimumStock', p_MinimumStock,
+            'ManufacturingDate', p_ManufacturingDate,
+            'ExpiryDate', p_ExpiryDate,
             'ImagePath', p_ImagePath,
             'IsActive', p_IsActive
         );

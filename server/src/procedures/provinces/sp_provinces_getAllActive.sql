@@ -21,6 +21,7 @@ BEGIN
     FROM provinces p
     WHERE p.IsDeleted = 0
     AND p.IsActive = 1
+	ORDER BY p.Name
     ;
 END$$
 
