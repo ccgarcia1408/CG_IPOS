@@ -12,6 +12,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_branches_update`(
     IN p_ProvinceId INT,
     IN p_MunicipalityId INT,
     IN p_BarangayId INT,
+    IN p_OtherAddress VARCHAR(255),
     IN p_UpdatedBy INT,
     IN p_IsActive TINYINT
 )
@@ -28,7 +29,7 @@ BEGIN
             'Failed to update branch.' AS Message;
     END;
 
-    -- Check if branch exists
+    -- CHECK IF BRANCH EXISTS
     IF NOT EXISTS (
         SELECT 1
         FROM branches
@@ -40,7 +41,7 @@ BEGIN
             0 AS Success,
             'Branch not found.' AS Message;
 
-    -- Check duplicate branch name (exclude current branch)
+    -- CHECK FOR DUPLICATE BRANCH NAME (EXCLUDE CURRENT BRANCH)
     ELSEIF EXISTS (
         SELECT 1
         FROM branches
@@ -57,21 +58,22 @@ BEGIN
 
         START TRANSACTION;
 
-        -- Store old values
+        -- STORE OLD VALUES FOR AUDIT LOG
         SELECT JSON_OBJECT(
             'Name', NAME,
             'Description', Description,
             'ContactNo', ContactNo,
-	    'ProvinceId', ProvinceId,
-	    'MunicipalityId', MunicipalityId,
-	    'BarangayId', BarangayId,
+	        'ProvinceId', ProvinceId,
+	        'MunicipalityId', MunicipalityId,
+	        'BarangayId', BarangayId,
+            'OtherAddress', OtherAddress,
             'IsActive', IsActive
         )
         INTO v_OldValue
         FROM branches
         WHERE BranchId = p_BranchId;
 
-        -- Update branch
+        -- UPDATE BRANCH RECORD
         UPDATE branches
         SET
             NAME = TRIM(p_Name),
@@ -80,13 +82,14 @@ BEGIN
             ProvinceId = p_ProvinceId,
             MunicipalityId = p_MunicipalityId,
             BarangayId = p_BarangayId,
+            OtherAddress = p_OtherAddress,
             UpdatedAt = NOW(),
             UpdatedBy = p_UpdatedBy,
             IsActive = p_IsActive
         WHERE BranchId = p_BranchId
-          AND IsDeleted = 0;
+        AND IsDeleted = 0;
 
-        -- Store new values
+        -- STORE NEW VALUES FOR AUDIT LOG
         SET v_NewValue = JSON_OBJECT(
             'Name', TRIM(p_Name),
             'Description', p_Description,
@@ -94,10 +97,11 @@ BEGIN
             'ProvinceId', p_ProvinceId,
             'MunicipalityId', p_MunicipalityId,
             'BarangayId', p_BarangayId,
+            'OtherAddress', p_OtherAddress,
             'IsActive', p_IsActive
         );
 
-        -- Audit log
+        -- AUDIT LOG
         INSERT INTO audit_logs (
             ActionType,
             `Action`,

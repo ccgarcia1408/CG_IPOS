@@ -29,18 +29,19 @@ BEGIN
 
     -- OLD VALUE
     SELECT JSON_OBJECT(
-        'Name', NAME,
-        'Description', Description,
-        'IsActive', IsActive
+        'Name', `Name`,
+        'Description', `Description`,
+        'IsActive', `IsActive`
     )
     INTO v_OldValue
     FROM payment_methods
     WHERE PaymentMethodId = p_PaymentMethodId;
 
+    -- UPDATE PAYMENT METHOD RECORD
     UPDATE payment_methods
     SET
-        NAME = p_Name,
-        Description = p_Description,
+        `Name` = p_Name,
+        `Description` = p_Description,
         UpdatedAt = NOW(),
         UpdatedBy = p_UpdatedBy,
         IsActive = p_IsActive

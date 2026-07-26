@@ -25,8 +25,8 @@ BEGIN
     START TRANSACTION;
 
     INSERT INTO payment_methods (
-        NAME,
-        Description,
+        `Name`,
+        `Description`,
         IsDeleted,
         CreatedAt,
         CreatedBy,
