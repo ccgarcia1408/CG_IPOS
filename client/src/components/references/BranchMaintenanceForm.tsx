@@ -34,6 +34,7 @@ export default function BranchMaintenanceForm() {
   const [loadingMunicipalities, setLoadingMunicipalities] = useState(false);
   const [loadingBarangays, setLoadingBarangays] = useState(false);
 
+  // FORM STATE
   const [form, setForm] = useState({
     Name: "",
     Description: "",
@@ -42,6 +43,7 @@ export default function BranchMaintenanceForm() {
     MunicipalityId: "",
     BarangayId: "",
     OtherAddress: "",
+    IsActive: "1",
   });
 
   // SEARCH STATE
@@ -269,19 +271,23 @@ export default function BranchMaintenanceForm() {
     Math.ceil(filteredBranches.length / pageSize)
   );
 
+  // PAGINATION
   const paginatedBranches = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return filteredBranches.slice(start, start + pageSize);
   }, [filteredBranches, currentPage]);
 
+  // PAGINATION
   useEffect(() => {
     setCurrentPage(1);
   }, [search]);
 
+  // PAGINATION
   const handlePrevious = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
   };
 
+  // PAGINATION
   const handleNext = () => {
     setCurrentPage((prev) =>
       Math.min(prev + 1, totalPages)
@@ -298,6 +304,7 @@ export default function BranchMaintenanceForm() {
       MunicipalityId: "",
       BarangayId: "",
       OtherAddress: "",
+      IsActive: "1",
     });
 
     setMunicipalities([]);
@@ -395,7 +402,10 @@ export default function BranchMaintenanceForm() {
     try {
       await api.put(
         `/api/branches/${editingBranch.BranchId}`,
-        form,
+        {
+          ...form,
+          IsActive: Number(form.IsActive),
+        },
         {
           auth: true,
         }
@@ -458,7 +468,7 @@ export default function BranchMaintenanceForm() {
   return (
     <div className="space-y-5">
 
-      {/* Page Header */}
+      {/* PAGE HEADER */}
       <div className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03] md:flex-row md:items-center md:justify-between">
         <div>
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
@@ -474,7 +484,7 @@ export default function BranchMaintenanceForm() {
         </button>
       </div>
 
-      {/* Statistics */}
+      {/* STATISTICS */}
       <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]">
           <p className="text-sm text-gray-500">Total Branches</p>
@@ -503,7 +513,7 @@ export default function BranchMaintenanceForm() {
         </div>
       </div>
 
-      {/* Search */}
+      {/* SEARCH */}
       <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]">
         <div className="relative">
           <input
@@ -526,6 +536,7 @@ export default function BranchMaintenanceForm() {
         </div>
       </div>
 
+      {/* BRANCH TABLE */}
       {loadingBranches ? (
         <div>Loading branches...</div>
       ) : (
@@ -643,6 +654,7 @@ export default function BranchMaintenanceForm() {
                                 MunicipalityId: String(branch.MunicipalityId),
                                 BarangayId: String(branch.BarangayId),
                                 OtherAddress: branch.OtherAddress ?? "",
+                                IsActive: branch.IsActive ? "1" : "0",
                               });
 
                               setIsAddOpen(true);
@@ -746,6 +758,7 @@ export default function BranchMaintenanceForm() {
         </div>
       )}
 
+      {/* ADD / EDIT BRANCH */}
       <Modal
         isOpen={isAddOpen}
         title={editingBranch ? "Edit Branch" : "Add Branch"}
@@ -932,6 +945,28 @@ export default function BranchMaintenanceForm() {
                 />
             </div>
 
+            {/* Status */}
+            {editingBranch && (
+              <div>
+                <label className="mb-2 block text-sm font-medium">
+                  Active
+                </label>
+
+                <select
+                  className="w-full rounded-lg border px-4 py-2"
+                  value={form.IsActive}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      IsActive: e.target.value,
+                    })
+                  }
+                >
+                  <option value="1">Yes</option>
+                  <option value="0">No</option>
+                </select>
+              </div>
+            )}
         </div>
       </Modal>
 
