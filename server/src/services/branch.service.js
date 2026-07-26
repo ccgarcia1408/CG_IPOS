@@ -21,7 +21,7 @@ const BranchService = {
     },
 
     async createBranch(data, userId) {
-        const { Name, Description, ContactNo, ProvinceId, MunicipalityId, BarangayId } = data;
+        const { Name, Description, ContactNo, ProvinceId, MunicipalityId, BarangayId, OtherAddress } = data;
 
         if (!Name) {
             throw new ApiError(400, "Branch name is required.");
@@ -34,6 +34,7 @@ const BranchService = {
             ProvinceId ?? null,
             MunicipalityId ?? null,
             BarangayId ?? null,
+            OtherAddress ?? null,
             userId
         );
 
@@ -52,6 +53,7 @@ const BranchService = {
             ProvinceId,
             MunicipalityId,
             BarangayId,
+            OtherAddress,
             IsActive
         } = data;
 
@@ -69,6 +71,7 @@ const BranchService = {
             ProvinceId ?? existingBranch.ProvinceId,
             MunicipalityId ?? existingBranch.MunicipalityId,
             BarangayId ?? existingBranch.BarangayId,
+            OtherAddress ?? existingBranch.OtherAddress,
             userId,
             IsActive ?? existingBranch.IsActive
         );
