@@ -11,6 +11,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_branches_create`(
     IN p_ProvinceId INT,
     IN p_MunicipalityId INT,
     IN p_BarangayId INT,
+    IN p_OtherAddress VARCHAR(255),
     IN p_CreatedBy INT
 )
 BEGIN
@@ -50,6 +51,7 @@ BEGIN
             ProvinceId,
             MunicipalityId,
             BarangayId,
+            OtherAddress,
             IsDeleted,
             CreatedAt,
             CreatedBy,
@@ -62,6 +64,7 @@ BEGIN
             p_ProvinceId,
             p_MunicipalityId,
             p_BarangayId,
+            p_OtherAddress,
             0,
             NOW(),
             p_CreatedBy,
@@ -93,6 +96,7 @@ BEGIN
                 'ProvinceId', p_ProvinceId,
                 'MunicipalityId', p_MunicipalityId,
                 'BarangayId', p_BarangayId,
+                'OtherAddress', p_OtherAddress,
                 'IsActive', 1
             ),
             p_CreatedBy
