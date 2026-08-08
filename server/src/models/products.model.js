@@ -16,19 +16,19 @@ const ProductModel = {
         return rows[0][0] || null;
     },
 
-    async create(branchId, categoryId, name, description, barcode, costPrice, sellingPrice, stock, minimumStock, manufacturingDate, expiryDate, imagePath, createdBy) {
+    async create(branchId, categoryId, name, description, barcode, sku, costPrice, sellingPrice, stock, minimumStock, manufacturingDate, expiryDate, imagePath, createdBy) {
         const [rows] = await pool.query(
-            `CALL sp_products_create(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [branchId, categoryId, name, description, barcode, costPrice, sellingPrice, stock, minimumStock, manufacturingDate, expiryDate, imagePath, createdBy]
+            `CALL sp_products_create(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [branchId, categoryId, name, description, barcode, sku, costPrice, sellingPrice, stock, minimumStock, manufacturingDate, expiryDate, imagePath, createdBy]
         );
 
         return rows[0][0];
     },
 
-    async update(productId, branchId, categoryId, name, description, barcode, costPrice, sellingPrice, stock, minimumStock, manufacturingDate, expiryDate, imagePath, updatedBy, isActive) {
+    async update(productId, branchId, categoryId, name, description, barcode, sku, costPrice, sellingPrice, stock, minimumStock, manufacturingDate, expiryDate, imagePath, updatedBy, isActive) {
         const [rows] = await pool.query(
-            `CALL sp_products_update(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [productId, branchId, categoryId, name, description, barcode, costPrice, sellingPrice, stock, minimumStock, manufacturingDate, expiryDate, imagePath, updatedBy, isActive]
+            `CALL sp_products_update(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [productId, branchId, categoryId, name, description, barcode, sku, costPrice, sellingPrice, stock, minimumStock, manufacturingDate, expiryDate, imagePath, updatedBy, isActive]
         );
 
         return rows[0][0];

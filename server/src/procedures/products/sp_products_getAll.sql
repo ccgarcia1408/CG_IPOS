@@ -8,14 +8,18 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_products_getAll`()
 BEGIN
     SELECT
 	p.ProductId,
+	p.BranchId,
 	p.CategoryId,
 	p.Name,
 	p.Description,
 	p.Barcode,
+	p.SKU,
 	p.CostPrice,
 	p.SellingPrice,
 	p.Stock,
 	p.MinimumStock,
+	p.ManufacturingDate,
+	p.ExpiryDate,
 	p.ImagePath,
 	p.IsDeleted,
 	p.DeletedBy,
