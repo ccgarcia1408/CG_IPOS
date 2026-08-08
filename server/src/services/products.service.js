@@ -1,6 +1,54 @@
 const ProductModel = require("../models/products.model");
 const ApiError = require("../utils/ApiError");
 
+const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
+
+const positiveInteger = (value, label) => {
+    const number = Number(value);
+    if (!Number.isInteger(number) || number <= 0) {
+        throw new ApiError(400, `${label} must be a positive whole number.`);
+    }
+    return number;
+};
+
+const nonNegativeNumber = (value, label, integerOnly = false) => {
+    if (value === null || value === undefined || value === "") return null;
+
+    const number = Number(value);
+    if (!Number.isFinite(number) || number < 0 || (integerOnly && !Number.isInteger(number))) {
+        throw new ApiError(400, `${label} must be a non-negative${integerOnly ? " whole" : ""} number.`);
+    }
+    return number;
+};
+
+const nullableText = (value) => {
+    if (value === null || value === undefined) return null;
+    return String(value).trim() || null;
+};
+
+const nullableDate = (value, label) => {
+    if (value === null || value === undefined || value === "") return null;
+
+    const date = String(value);
+    const parsedDate = new Date(`${date}T00:00:00Z`);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(parsedDate.getTime()) || parsedDate.toISOString().slice(0, 10) !== date) {
+        throw new ApiError(400, `${label} must be a valid date.`);
+    }
+    return date;
+};
+
+const activeFlag = (value) => {
+    const number = Number(value);
+    if (number !== 0 && number !== 1) throw new ApiError(400, "IsActive must be 0 or 1.");
+    return number;
+};
+
+const validateDates = (manufacturingDate, expiryDate) => {
+    if (manufacturingDate && expiryDate && String(expiryDate).slice(0, 10) < String(manufacturingDate).slice(0, 10)) {
+        throw new ApiError(400, "ExpiryDate cannot be earlier than ManufacturingDate.");
+    }
+};
+
 const ProductService = {
     async getProducts() {
         return await ProductModel.getAll();
@@ -11,121 +59,93 @@ const ProductService = {
     },
 
     async getProductById(productId) {
-        const product = await ProductModel.findById(productId);
-
-        if (!product) {
-            throw new ApiError(404, "Product not found");
-        }
-        
+        const product = await ProductModel.findById(positiveInteger(productId, "ProductId"));
+        if (!product) throw new ApiError(404, "Product not found");
         return product;
     },
 
     async createProduct(data, userId) {
-        const { 
-            BranchId, 
-            CategoryId, 
-            Name, 
-            Description, 
-            Barcode, 
-            CostPrice, 
-            SellingPrice, 
-            Stock, 
-            MinimumStock, 
-            ManufacturingDate, 
-            ExpiryDate, 
-            ImagePath 
-        } = data;
-
-        if (!Name) {
-            throw new ApiError(400, "Product name is required.");
-        }
+        const branchId = positiveInteger(data.BranchId, "BranchId");
+        const categoryId = positiveInteger(data.CategoryId, "CategoryId");
+        const name = nullableText(data.Name);
+        if (!name) throw new ApiError(400, "Product name is required.");
+        const sku = nullableText(data.SKU);
+        const manufacturingDate = nullableDate(data.ManufacturingDate, "ManufacturingDate");
+        const expiryDate = nullableDate(data.ExpiryDate, "ExpiryDate");
+        validateDates(manufacturingDate, expiryDate);
 
         const result = await ProductModel.create(
-            BranchId,
-            CategoryId,
-            Name,
-            Description ?? null,
-            Barcode ?? null,
-            CostPrice ?? null,
-            SellingPrice ?? null,
-            Stock ?? null,
-            MinimumStock ?? null,
-            ManufacturingDate ?? null,
-            ExpiryDate ?? null,
-            ImagePath ?? null,
+            branchId,
+            categoryId,
+            name,
+            nullableText(data.Description),
+            nullableText(data.Barcode),
+            sku,
+            nonNegativeNumber(data.CostPrice, "CostPrice"),
+            nonNegativeNumber(data.SellingPrice, "SellingPrice"),
+            nonNegativeNumber(data.Stock, "Stock", true),
+            nonNegativeNumber(data.MinimumStock, "MinimumStock", true),
+            manufacturingDate,
+            expiryDate,
+            nullableText(data.ImagePath),
             userId
         );
 
-        if (!result.Success) {
-            throw new ApiError(400, result.Message);
-        }
-
-        console.log("ProductService.createProduct result:", data, result);
-
+        if (!result.Success) throw new ApiError(400, result.Message);
         return result;
     },
 
     async updateProduct(productId, data, userId) {
-        const {
-            BranchId,
-            CategoryId,
-            Name,
-            Description,
-            Barcode,
-            CostPrice,
-            SellingPrice,
-            Stock,
-            MinimumStock,
-            ManufacturingDate,
-            ExpiryDate,
-            ImagePath,
-            IsActive
-        } = data;
+        const id = positiveInteger(productId, "ProductId");
+        const existingProduct = await ProductModel.findById(id);
+        if (!existingProduct) throw new ApiError(404, "Product not found");
 
-        const existingProduct = await ProductModel.findById(productId);
+        const branchId = hasOwn(data, "BranchId") ? positiveInteger(data.BranchId, "BranchId") : existingProduct.BranchId;
+        const categoryId = hasOwn(data, "CategoryId") ? positiveInteger(data.CategoryId, "CategoryId") : existingProduct.CategoryId;
+        const name = hasOwn(data, "Name") ? nullableText(data.Name) : existingProduct.Name;
+        if (!name) throw new ApiError(400, "Product name is required.");
+        const sku = hasOwn(data, "SKU") ? nullableText(data.SKU) : existingProduct.SKU;
 
-        if (!existingProduct) {
-            throw new ApiError(404, "Product not found");
-        }
+        const manufacturingDate = hasOwn(data, "ManufacturingDate")
+            ? nullableDate(data.ManufacturingDate, "ManufacturingDate")
+            : existingProduct.ManufacturingDate;
+        const expiryDate = hasOwn(data, "ExpiryDate")
+            ? nullableDate(data.ExpiryDate, "ExpiryDate")
+            : existingProduct.ExpiryDate;
+        validateDates(manufacturingDate, expiryDate);
 
         const result = await ProductModel.update(
-            productId,
-            BranchId ?? existingProduct.BranchId,
-            CategoryId ?? existingProduct.CategoryId,
-            Name ?? existingProduct.Name,
-            Description ?? existingProduct.Description,
-            Barcode ?? existingProduct.Barcode,
-            CostPrice ?? existingProduct.CostPrice,
-            SellingPrice ?? existingProduct.SellingPrice,
-            Stock ?? existingProduct.Stock,
-            MinimumStock ?? existingProduct.MinimumStock,
-            ManufacturingDate ?? existingProduct.ManufacturingDate,
-            ExpiryDate ?? existingProduct.ExpiryDate,
-            ImagePath ?? existingProduct.ImagePath,
+            id,
+            branchId,
+            categoryId,
+            name,
+            hasOwn(data, "Description") ? nullableText(data.Description) : existingProduct.Description,
+            hasOwn(data, "Barcode") ? nullableText(data.Barcode) : existingProduct.Barcode,
+            sku,
+            hasOwn(data, "CostPrice") ? nonNegativeNumber(data.CostPrice, "CostPrice") : existingProduct.CostPrice,
+            hasOwn(data, "SellingPrice") ? nonNegativeNumber(data.SellingPrice, "SellingPrice") : existingProduct.SellingPrice,
+            hasOwn(data, "Stock") ? nonNegativeNumber(data.Stock, "Stock", true) : existingProduct.Stock,
+            hasOwn(data, "MinimumStock") ? nonNegativeNumber(data.MinimumStock, "MinimumStock", true) : existingProduct.MinimumStock,
+            manufacturingDate,
+            expiryDate,
+            hasOwn(data, "ImagePath") ? nullableText(data.ImagePath) : existingProduct.ImagePath,
             userId,
-            IsActive ?? existingProduct.IsActive
+            hasOwn(data, "IsActive") ? activeFlag(data.IsActive) : existingProduct.IsActive
         );
 
-        if (!result.Success) {
-            throw new ApiError(400, result.Message);
-        }
-
+        if (!result.Success) throw new ApiError(400, result.Message);
         return result;
     },
 
     async deleteProduct(productId, userId) {
-        const result = await ProductModel.delete(
-            productId,
-            userId
-        );          
+        const id = positiveInteger(productId, "ProductId");
+        const existingProduct = await ProductModel.findById(id);
+        if (!existingProduct) throw new ApiError(404, "Product not found");
 
-        if (!result.Success) {
-            throw new ApiError(400, result.Message);
-        }
-
+        const result = await ProductModel.delete(id, userId);
+        if (!result.Success) throw new ApiError(400, result.Message);
         return result;
     }
-
 };
 
 module.exports = ProductService;

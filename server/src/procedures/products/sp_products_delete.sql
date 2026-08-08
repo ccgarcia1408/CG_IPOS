@@ -29,6 +29,7 @@ BEGIN
         'Name', NAME,
         'Description', Description,
         'Barcode', Barcode,
+        'SKU', SKU,
         'CostPrice', CostPrice,
         'SellingPrice', SellingPrice,
         'Stock', Stock,

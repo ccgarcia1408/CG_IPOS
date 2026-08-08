@@ -5,6 +5,7 @@ USE `cg_ipos_db`$$
 DROP PROCEDURE IF EXISTS `sp_terminals_create`$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_terminals_create`(
+    IN p_BranchId INT,
     IN p_Name VARCHAR(255),
     IN p_Description TEXT,
     IN p_CreatedBy INT
@@ -25,7 +26,8 @@ BEGIN
     START TRANSACTION;
 
     INSERT INTO terminals (
-        NAME,
+        BranchId,
+        `Name`,
         Description,
         IsDeleted,
         CreatedAt,
@@ -33,6 +35,7 @@ BEGIN
         IsActive
     )
     VALUES (
+        p_BranchId,
         p_Name,
         p_Description,
         0,
@@ -60,6 +63,7 @@ BEGIN
         v_TerminalId,
         NULL,
         JSON_OBJECT(
+            'BranchId', p_BranchId,
             'Name', p_Name,
             'Description', p_Description,
             'IsActive', 1

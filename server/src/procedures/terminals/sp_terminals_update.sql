@@ -6,6 +6,7 @@ DROP PROCEDURE IF EXISTS `sp_terminals_update`$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_terminals_update`(
     IN p_TerminalId INT,
+    IN p_BranchId INT,
     IN p_Name VARCHAR(255),
     IN p_Description TEXT,
     IN p_UpdatedBy INT,
@@ -29,7 +30,8 @@ BEGIN
 
     -- OLD VALUE
     SELECT JSON_OBJECT(
-        'Name', NAME,
+        'BranchId', BranchId,
+        'Name', `Name`,
         'Description', Description,
         'IsActive', IsActive
     )
@@ -39,7 +41,8 @@ BEGIN
 
     UPDATE terminals
     SET
-        NAME = p_Name,
+        BranchId = p_BranchId,
+        `Name` = p_Name,
         Description = p_Description,
         UpdatedAt = NOW(),
         UpdatedBy = p_UpdatedBy,
@@ -49,6 +52,7 @@ BEGIN
 
     -- NEW VALUE
     SET v_NewValue = JSON_OBJECT(
+        'BranchId', p_BranchId,
         'Name', p_Name,
         'Description', p_Description,
         'IsActive', p_IsActive

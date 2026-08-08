@@ -4,7 +4,9 @@ USE `cg_ipos_db`$$
 
 DROP PROCEDURE IF EXISTS `sp_products_getById`$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_products_getById`(IN `p_ProductId` INT)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_products_getById`(
+	IN `p_ProductId` INT
+)
 BEGIN
     SELECT
 	p.ProductId,
@@ -13,10 +15,13 @@ BEGIN
 	p.Name,
 	p.Description,
 	p.Barcode,
+	p.SKU,
 	p.CostPrice,
 	p.SellingPrice,
 	p.Stock,
 	p.MinimumStock,
+	p.ManufacturingDate,
+	p.ExpiryDate,
 	p.ImagePath,
 	p.IsDeleted,
 	p.DeletedBy,
