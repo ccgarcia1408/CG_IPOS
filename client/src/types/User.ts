@@ -1,0 +1,26 @@
+export type User = {
+    UserId: number;
+    EmployeeId: number;
+    RoleId: number;
+    Username: string;
+    Email: string;
+    LastLoginDate: string;
+    LastLogoutDate: string;
+    IsPasswordChanged: boolean;
+    PasswordChangeDate: string;
+    IsAccountVerified: boolean;
+    AccountVerifiedDate: string;
+    IsDeleted: boolean;
+    DeletedBy: number | null;
+    DateDeleted: string | null;
+    CreatedAt: string;
+    IsActive: boolean;
+    FirstName: string;
+    MiddleName: string | null;
+    LastName: string;
+    Address: string | null;
+    Age: number | null;
+    ContactNo: string | null;
+    DateHired: string | null;
+    IsResigned: boolean;
+};
