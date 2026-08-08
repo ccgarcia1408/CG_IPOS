@@ -12,6 +12,7 @@ const provinceRoutes = require("./province.routes");
 const municipalityRoutes = require("./municipality.routes");
 const barangayRoutes = require("./barangay.routes");
 const paymentMethodRoutes = require("./payment-method.routes");
+const categoryRoutes = require("./category.routes");
 
 router.use("/login", loginRoutes);
 
@@ -34,5 +35,7 @@ router.use("/municipalities", municipalityRoutes);
 router.use("/barangays", barangayRoutes);
 
 router.use("/payment-methods", paymentMethodRoutes);
+
+router.use("/categories", categoryRoutes);
 
 module.exports = router;

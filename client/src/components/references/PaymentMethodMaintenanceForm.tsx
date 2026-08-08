@@ -1,222 +1,43 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "../ui/table";
-
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { api } from "../../services/api";
+import { PaymentMethod } from "../../types/PaymentMethod";
 import Badge from "../ui/badge/Badge";
+import Modal from "../ui/modal/Modal";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "../ui/table";
 
-interface Order {
-  id: number;
-  user: {
-    image: string;
-    name: string;
-    role: string;
-  };
-  projectName: string;
-  team: {
-    images: string[];
-  };
-  status: string;
-  budget: string;
-}
-
-// Define the table data using the interface
-const tableData: Order[] = [
-  {
-    id: 1,
-    user: {
-      image: "/images/user/user-17.jpg",
-      name: "Lindsey Curtis",
-      role: "Web Designer",
-    },
-    projectName: "Agency Website",
-    team: {
-      images: [
-        "/images/user/user-22.jpg",
-        "/images/user/user-23.jpg",
-        "/images/user/user-24.jpg",
-      ],
-    },
-    budget: "3.9K",
-    status: "Active",
-  },
-  {
-    id: 2,
-    user: {
-      image: "/images/user/user-18.jpg",
-      name: "Kaiya George",
-      role: "Project Manager",
-    },
-    projectName: "Technology",
-    team: {
-      images: ["/images/user/user-25.jpg", "/images/user/user-26.jpg"],
-    },
-    budget: "24.9K",
-    status: "Pending",
-  },
-  {
-    id: 3,
-    user: {
-      image: "/images/user/user-17.jpg",
-      name: "Zain Geidt",
-      role: "Content Writing",
-    },
-    projectName: "Blog Writing",
-    team: {
-      images: ["/images/user/user-27.jpg"],
-    },
-    budget: "12.7K",
-    status: "Active",
-  },
-  {
-    id: 4,
-    user: {
-      image: "/images/user/user-20.jpg",
-      name: "Abram Schleifer",
-      role: "Digital Marketer",
-    },
-    projectName: "Social Media",
-    team: {
-      images: [
-        "/images/user/user-28.jpg",
-        "/images/user/user-29.jpg",
-        "/images/user/user-30.jpg",
-      ],
-    },
-    budget: "2.8K",
-    status: "Cancel",
-  },
-  {
-    id: 5,
-    user: {
-      image: "/images/user/user-21.jpg",
-      name: "Carla George",
-      role: "Front-end Developer",
-    },
-    projectName: "Website",
-    team: {
-      images: [
-        "/images/user/user-31.jpg",
-        "/images/user/user-32.jpg",
-        "/images/user/user-33.jpg",
-      ],
-    },
-    budget: "4.5K",
-    status: "Active",
-  },
-];
+const emptyForm = { Name: "", Description: "", IsActive: "1" };
+const getErrorMessage = (error: unknown, fallback: string) => error instanceof Error ? error.message : fallback;
 
 export default function PaymentMethodMaintenanceForm() {
-  return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-      <div className="max-w-full overflow-x-auto">
-        <Table>
-          {/* Table Header */}
-          <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
-            <TableRow>
-              <TableCell
-                isHeader
-                className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
-                User
-              </TableCell>
-              <TableCell
-                isHeader
-                className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
-                Project Name
-              </TableCell>
-              <TableCell
-                isHeader
-                className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
-                Team
-              </TableCell>
-              <TableCell
-                isHeader
-                className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
-                Status
-              </TableCell>
-              <TableCell
-                isHeader
-                className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
-                Budget
-              </TableCell>
-            </TableRow>
-          </TableHeader>
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [form, setForm] = useState(emptyForm);
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
+  const [editing, setEditing] = useState<PaymentMethod | null>(null);
+  const [deleting, setDeleting] = useState<PaymentMethod | null>(null);
+  const loadPaymentMethods = async () => { try { setLoading(true); const response = await api.get<{ data: PaymentMethod[] }>("/api/payment-methods", { auth: true }); setPaymentMethods(response.data ?? []); } catch (error: unknown) { toast.error(getErrorMessage(error, "Failed to load payment methods.")); } finally { setLoading(false); } };
+  useEffect(() => { void loadPaymentMethods(); }, []);
+  const filtered = useMemo(() => { const keyword = search.trim().toLowerCase(); return keyword ? paymentMethods.filter((method) => [method.Name, method.Description].filter(Boolean).some((value) => String(value).toLowerCase().includes(keyword))) : paymentMethods; }, [paymentMethods, search]);
+  const activeCount = useMemo(() => paymentMethods.filter((method) => method.IsActive).length, [paymentMethods]);
+  const inactiveCount = useMemo(() => paymentMethods.filter((method) => !method.IsActive).length, [paymentMethods]);
+  const newCount = useMemo(() => { const now = new Date(); return paymentMethods.filter((method) => { const created = new Date(method.CreatedAt); return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear(); }).length; }, [paymentMethods]);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const paginated = useMemo(() => filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize), [currentPage, filtered, pageSize]);
+  useEffect(() => { setCurrentPage(1); }, [search, pageSize]);
+  const close = () => { setIsOpen(false); setEditing(null); setForm(emptyForm); };
+  const save = async () => { if (!form.Name.trim()) return toast.error("Payment method name is required."); const payload = { Name: form.Name.trim(), Description: form.Description.trim() || null, IsActive: Number(form.IsActive) }; try { if (editing) await api.put(`/api/payment-methods/${editing.PaymentMethodId}`, payload, { auth: true }); else await api.post("/api/payment-methods", payload, { auth: true }); toast.success(`Payment method ${editing ? "updated" : "added"} successfully.`); close(); await loadPaymentMethods(); } catch (error: unknown) { toast.error(getErrorMessage(error, `Failed to ${editing ? "update" : "add"} payment method.`)); } };
+  const remove = async () => { if (!deleting) return; try { await api.delete(`/api/payment-methods/${deleting.PaymentMethodId}`, { auth: true }); toast.success("Payment method deleted successfully."); setDeleting(null); await loadPaymentMethods(); } catch (error: unknown) { toast.error(getErrorMessage(error, "Failed to delete payment method.")); } };
 
-          {/* Table Body */}
-          <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-            {tableData.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell className="px-5 py-4 sm:px-6 text-start">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 overflow-hidden rounded-full">
-                      <img
-                        width={40}
-                        height={40}
-                        src={order.user.image}
-                        alt={order.user.name}
-                      />
-                    </div>
-                    <div>
-                      <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                        {order.user.name}
-                      </span>
-                      <span className="block text-gray-500 text-theme-xs dark:text-gray-400">
-                        {order.user.role}
-                      </span>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                  {order.projectName}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                  <div className="flex -space-x-2">
-                    {order.team.images.map((teamImage, index) => (
-                      <div
-                        key={index}
-                        className="w-6 h-6 overflow-hidden border-2 border-white rounded-full dark:border-gray-900"
-                      >
-                        <img
-                          width={24}
-                          height={24}
-                          src={teamImage}
-                          alt={`Team member ${index + 1}`}
-                          className="w-full size-6"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                  <Badge
-                    size="sm"
-                    color={
-                      order.status === "Active"
-                        ? "success"
-                        : order.status === "Pending"
-                        ? "warning"
-                        : "error"
-                    }
-                  >
-                    {order.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                  {order.budget}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
-  );
+  return <div className="space-y-5">
+    <div className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03] md:flex-row md:items-center md:justify-between"><div><h2 className="text-xl font-semibold text-gray-800 dark:text-white">Payment Method Maintenance</h2><p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage available payment methods.</p></div><button onClick={() => setIsOpen(true)} className="inline-flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-600">+ Add Payment Method</button></div>
+    <div className="grid grid-cols-1 gap-5 md:grid-cols-4">{[["Total Payment Methods", paymentMethods.length, ""], ["Active", activeCount, "text-green-600"], ["Inactive", inactiveCount, "text-red-600"], ["New This Month", newCount, "text-blue-600"]].map(([label, value, color]) => <div key={label} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]"><p className="text-sm text-gray-500">{label}</p><h3 className={`mt-2 text-2xl font-bold ${color}`}>{value}</h3></div>)}</div>
+    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]"><div className="relative"><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search payment method..." className="w-full rounded-lg border border-gray-300 py-2 pl-4 pr-16 text-sm" />{search && <button type="button" onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-3 py-1 text-xs font-medium text-red-500 hover:bg-gray-100">Clear</button>}</div></div>
+    {loading ? <div>Loading payment methods...</div> : <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]"><div className="border-b border-gray-100 px-5 py-4 dark:border-white/[0.05]"><h3 className="font-semibold text-gray-800 dark:text-white">Payment Method List</h3></div><div className="max-w-full overflow-x-auto"><Table><TableHeader className="bg-gray-50 dark:bg-gray-900/30"><TableRow>{["Name", "Description", "Status", "Actions"].map((header) => <TableCell key={header} isHeader className={`px-5 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500 ${header === "Actions" ? "text-center" : "text-start"}`}>{header}</TableCell>)}</TableRow></TableHeader><TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">{paginated.length ? paginated.map((method) => <TableRow key={method.PaymentMethodId} className="transition hover:bg-gray-50 dark:hover:bg-white/[0.02]"><TableCell className="px-5 py-4 font-medium text-gray-800 dark:text-white">{method.Name}</TableCell><TableCell className="px-5 py-4 text-gray-600 dark:text-gray-400">{method.Description || "-"}</TableCell><TableCell className="px-5 py-4"><Badge size="sm" color={method.IsActive ? "success" : "error"}>{method.IsActive ? "Active" : "Inactive"}</Badge></TableCell><TableCell className="px-5 py-4"><div className="flex justify-center gap-2"><button onClick={() => { setEditing(method); setForm({ Name: method.Name, Description: method.Description ?? "", IsActive: method.IsActive ? "1" : "0" }); setIsOpen(true); }} className="rounded-lg bg-blue-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-600">Edit</button><button onClick={() => setDeleting(method)} className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600">Delete</button></div></TableCell></TableRow>) : <TableRow><TableCell colSpan={4} className="py-10 text-center text-gray-500">No payment methods found.</TableCell></TableRow>}</TableBody></Table></div><div className="flex flex-col items-center justify-between gap-4 border-t border-gray-100 px-5 py-4 dark:border-white/[0.05] md:flex-row"><span className="text-sm text-gray-500">Showing {filtered.length ? (currentPage - 1) * pageSize + 1 : 0} to {Math.min(currentPage * pageSize, filtered.length)} of {filtered.length} entries</span><div className="flex items-center gap-2"><button onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} disabled={currentPage === 1} className="rounded-lg border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:text-gray-400">Previous</button>{Array.from({ length: totalPages }, (_, index) => <button key={index + 1} onClick={() => setCurrentPage(index + 1)} className={`h-9 w-9 rounded-lg text-sm font-medium ${currentPage === index + 1 ? "bg-brand-500 text-white" : "border border-gray-300 hover:bg-gray-100"}`}>{index + 1}</button>)}<button onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))} disabled={currentPage === totalPages} className="rounded-lg border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:text-gray-400">Next</button></div><select value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))} className="rounded-lg border border-gray-300 px-3 py-2 text-sm"><option value={5}>5</option><option value={10}>10</option><option value={20}>20</option><option value={50}>50</option></select></div></div>}
+    <Modal isOpen={isOpen} title={editing ? "Edit Payment Method" : "Add Payment Method"} onClose={close} onConfirm={save} confirmText={editing ? "Update Payment Method" : "Save Payment Method"} width="md"><div className="space-y-5"><div><label className="mb-2 block text-sm font-medium">Payment Method Name</label><input value={form.Name} onChange={(event) => setForm((current) => ({ ...current, Name: event.target.value }))} className="w-full rounded-lg border px-4 py-2" /></div><div><label className="mb-2 block text-sm font-medium">Description</label><textarea rows={3} value={form.Description} onChange={(event) => setForm((current) => ({ ...current, Description: event.target.value }))} className="w-full rounded-lg border px-4 py-2" /></div>{editing && <div><label className="mb-2 block text-sm font-medium">Active</label><select value={form.IsActive} onChange={(event) => setForm((current) => ({ ...current, IsActive: event.target.value }))} className="w-full rounded-lg border px-4 py-2"><option value="1">Yes</option><option value="0">No</option></select></div>}</div></Modal>
+    <Modal isOpen={!!deleting} title="Delete Payment Method" onClose={() => setDeleting(null)} onConfirm={remove} confirmText="Delete" confirmColor="danger" width="sm"><div className="space-y-4"><p className="text-sm text-gray-600 dark:text-gray-300">Are you sure you want to delete this payment method?</p><div className="rounded-lg border border-red-200 bg-red-50 p-4"><p className="font-semibold text-red-700">{deleting?.Name}</p><p className="mt-1 text-sm text-red-600">{deleting?.Description}</p></div><p className="text-sm text-gray-500">This action cannot be undone.</p></div></Modal>
+  </div>;
 }

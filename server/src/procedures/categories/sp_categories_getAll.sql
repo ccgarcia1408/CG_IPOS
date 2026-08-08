@@ -7,6 +7,7 @@ DROP PROCEDURE IF EXISTS `sp_categories_getAll`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_categories_getAll`()
 BEGIN
     SELECT
+	c.CategoryId,
 	c.BranchId,
 	c.Name,
 	c.Description,
