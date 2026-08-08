@@ -28,8 +28,12 @@ BEGIN
         'SupplierName', SupplierName,
         'ContactPerson', ContactPerson,
         'ContactNo', ContactNo,
+        'TelNo', TelNo,
         'Email', Email,
-        'Address', Address,
+        'ProvinceId', ProvinceId,
+        'MunicipalityId', MunicipalityId,
+        'BarangayId', BarangayId,
+        'OtherAddress', OtherAddress,
         'IsActive', IsActive,
         'IsDeleted', IsDeleted
     )

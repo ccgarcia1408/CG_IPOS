@@ -9,8 +9,12 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_suppliers_update`(
     IN p_SupplierName VARCHAR(255),
     IN p_ContactPerson VARCHAR(255),
     IN p_ContactNo VARCHAR(100),
+    IN p_TelNo VARCHAR(100),
     IN p_Email VARCHAR(255),
-    IN p_Address TEXT,
+    IN p_ProvinceId INT,
+    IN p_MunicipalityId INT,
+    IN p_BarangayId INT,
+    IN p_OtherAddress TEXT,
     IN p_UpdatedBy INT,
     IN p_IsActive TINYINT
 )
@@ -35,8 +39,12 @@ BEGIN
         'SupplierName', SupplierName,
         'ContactPerson', ContactPerson,
         'ContactNo', ContactNo,
+        'TelNo', TelNo,
         'Email', Email,
-        'Address', Address,
+        'ProvinceId', ProvinceId,
+        'MunicipalityId', MunicipalityId,
+        'BarangayId', BarangayId,
+        'OtherAddress', OtherAddress,
         'IsActive', IsActive
     )
     INTO v_OldValue
@@ -48,8 +56,12 @@ BEGIN
         SupplierName = p_SupplierName,
         ContactPerson = p_ContactPerson,
         ContactNo = p_ContactNo,
+        TelNo = p_TelNo,
         Email = p_Email,
-        Address = p_Address,
+        ProvinceId = p_ProvinceId,
+        MunicipalityId = p_MunicipalityId,
+        BarangayId = p_BarangayId,
+        OtherAddress = p_OtherAddress,
         UpdatedAt = NOW(),
         UpdatedBy = p_UpdatedBy,
         IsActive = p_IsActive
@@ -61,8 +73,12 @@ BEGIN
         'SupplierName', p_SupplierName,
         'ContactPerson', p_ContactPerson,
         'ContactNo', p_ContactNo,
+        'TelNo', p_TelNo,
         'Email', p_Email,
-        'Address', p_Address,
+        'ProvinceId', p_ProvinceId,
+        'MunicipalityId', p_MunicipalityId,
+        'BarangayId', p_BarangayId,
+        'OtherAddress', p_OtherAddress,
         'IsActive', p_IsActive
     );
 

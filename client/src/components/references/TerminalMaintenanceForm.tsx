@@ -1,222 +1,47 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "../ui/table";
-
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { api } from "../../services/api";
+import { Branch } from "../../types/Branch";
+import { Terminal } from "../../types/Terminal";
 import Badge from "../ui/badge/Badge";
+import Modal from "../ui/modal/Modal";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "../ui/table";
 
-interface Order {
-  id: number;
-  user: {
-    image: string;
-    name: string;
-    role: string;
-  };
-  projectName: string;
-  team: {
-    images: string[];
-  };
-  status: string;
-  budget: string;
-}
-
-// Define the table data using the interface
-const tableData: Order[] = [
-  {
-    id: 1,
-    user: {
-      image: "/images/user/user-17.jpg",
-      name: "Lindsey Curtis",
-      role: "Web Designer",
-    },
-    projectName: "Agency Website",
-    team: {
-      images: [
-        "/images/user/user-22.jpg",
-        "/images/user/user-23.jpg",
-        "/images/user/user-24.jpg",
-      ],
-    },
-    budget: "3.9K",
-    status: "Active",
-  },
-  {
-    id: 2,
-    user: {
-      image: "/images/user/user-18.jpg",
-      name: "Kaiya George",
-      role: "Project Manager",
-    },
-    projectName: "Technology",
-    team: {
-      images: ["/images/user/user-25.jpg", "/images/user/user-26.jpg"],
-    },
-    budget: "24.9K",
-    status: "Pending",
-  },
-  {
-    id: 3,
-    user: {
-      image: "/images/user/user-17.jpg",
-      name: "Zain Geidt",
-      role: "Content Writing",
-    },
-    projectName: "Blog Writing",
-    team: {
-      images: ["/images/user/user-27.jpg"],
-    },
-    budget: "12.7K",
-    status: "Active",
-  },
-  {
-    id: 4,
-    user: {
-      image: "/images/user/user-20.jpg",
-      name: "Abram Schleifer",
-      role: "Digital Marketer",
-    },
-    projectName: "Social Media",
-    team: {
-      images: [
-        "/images/user/user-28.jpg",
-        "/images/user/user-29.jpg",
-        "/images/user/user-30.jpg",
-      ],
-    },
-    budget: "2.8K",
-    status: "Cancel",
-  },
-  {
-    id: 5,
-    user: {
-      image: "/images/user/user-21.jpg",
-      name: "Carla George",
-      role: "Front-end Developer",
-    },
-    projectName: "Website",
-    team: {
-      images: [
-        "/images/user/user-31.jpg",
-        "/images/user/user-32.jpg",
-        "/images/user/user-33.jpg",
-      ],
-    },
-    budget: "4.5K",
-    status: "Active",
-  },
-];
+const emptyForm = { BranchId: "", Name: "", Description: "", IsActive: "1" };
+const errorMessage = (error: unknown, fallback: string) => error instanceof Error ? error.message : fallback;
 
 export default function TerminalMaintenanceForm() {
-  return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-      <div className="max-w-full overflow-x-auto">
-        <Table>
-          {/* Table Header */}
-          <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
-            <TableRow>
-              <TableCell
-                isHeader
-                className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
-                User
-              </TableCell>
-              <TableCell
-                isHeader
-                className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
-                Project Name
-              </TableCell>
-              <TableCell
-                isHeader
-                className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
-                Team
-              </TableCell>
-              <TableCell
-                isHeader
-                className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
-                Status
-              </TableCell>
-              <TableCell
-                isHeader
-                className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
-                Budget
-              </TableCell>
-            </TableRow>
-          </TableHeader>
+  const [terminals, setTerminals] = useState<Terminal[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [form, setForm] = useState(emptyForm);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<Terminal | null>(null);
+  const [deleting, setDeleting] = useState<Terminal | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
 
-          {/* Table Body */}
-          <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-            {tableData.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell className="px-5 py-4 sm:px-6 text-start">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 overflow-hidden rounded-full">
-                      <img
-                        width={40}
-                        height={40}
-                        src={order.user.image}
-                        alt={order.user.name}
-                      />
-                    </div>
-                    <div>
-                      <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                        {order.user.name}
-                      </span>
-                      <span className="block text-gray-500 text-theme-xs dark:text-gray-400">
-                        {order.user.role}
-                      </span>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                  {order.projectName}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                  <div className="flex -space-x-2">
-                    {order.team.images.map((teamImage, index) => (
-                      <div
-                        key={index}
-                        className="w-6 h-6 overflow-hidden border-2 border-white rounded-full dark:border-gray-900"
-                      >
-                        <img
-                          width={24}
-                          height={24}
-                          src={teamImage}
-                          alt={`Team member ${index + 1}`}
-                          className="w-full size-6"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                  <Badge
-                    size="sm"
-                    color={
-                      order.status === "Active"
-                        ? "success"
-                        : order.status === "Pending"
-                        ? "warning"
-                        : "error"
-                    }
-                  >
-                    {order.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                  {order.budget}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
-  );
+  const load = async () => {
+    try { setLoading(true); const response = await api.get<{ data: Terminal[] }>("/api/terminals", { auth: true }); setTerminals(response.data ?? []); }
+    catch (error) { toast.error(errorMessage(error, "Failed to load terminals.")); }
+    finally { setLoading(false); }
+  };
+  useEffect(() => { void load(); void api.get<{ data: Branch[] }>("/api/branches/active", { auth: true }).then((response) => setBranches(response.data ?? [])).catch((error: unknown) => toast.error(errorMessage(error, "Failed to load branches."))); }, []);
+  const filtered = useMemo(() => { const value = search.toLowerCase().trim(); return value ? terminals.filter((terminal) => [terminal.Name, terminal.Description, branches.find((branch) => branch.BranchId === terminal.BranchId)?.Description].filter(Boolean).some((item) => String(item).toLowerCase().includes(value))) : terminals; }, [branches, search, terminals]);
+  const close = () => { setIsOpen(false); setEditing(null); setForm(emptyForm); };
+  const save = async () => {
+    if (!form.BranchId) return toast.error("Please select a branch.");
+    if (!form.Name.trim()) return toast.error("Terminal name is required.");
+    const payload = { BranchId: Number(form.BranchId), Name: form.Name.trim(), Description: form.Description.trim() || null, IsActive: Number(form.IsActive) };
+    try { if (editing) await api.put(`/api/terminals/${editing.TerminalId}`, payload, { auth: true }); else await api.post("/api/terminals", payload, { auth: true }); toast.success(`Terminal ${editing ? "updated" : "added"} successfully.`); close(); await load(); }
+    catch (error) { toast.error(errorMessage(error, `Failed to ${editing ? "update" : "add"} terminal.`)); }
+  };
+  const remove = async () => { if (!deleting) return; try { await api.delete(`/api/terminals/${deleting.TerminalId}`, { auth: true }); toast.success("Terminal deleted successfully."); setDeleting(null); await load(); } catch (error) { toast.error(errorMessage(error, "Failed to delete terminal.")); } };
+
+  return <div className="space-y-5">
+    <div className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between"><div><h2 className="text-xl font-semibold text-gray-800">Terminal Maintenance</h2><p className="mt-1 text-sm text-gray-500">Manage POS terminals by branch.</p></div><button onClick={() => setIsOpen(true)} className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600">+ Add Terminal</button></div>
+    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search terminals..." className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm" /></div>
+    {loading ? <div>Loading terminals...</div> : <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"><div className="max-w-full overflow-x-auto"><Table><TableHeader className="bg-gray-50"><TableRow>{["Terminal", "Branch", "Description", "Status", "Actions"].map((header) => <TableCell key={header} isHeader className="px-5 py-4 text-start text-xs font-semibold uppercase text-gray-500">{header}</TableCell>)}</TableRow></TableHeader><TableBody className="divide-y divide-gray-100">{filtered.length ? filtered.map((terminal) => <TableRow key={terminal.TerminalId}><TableCell className="px-5 py-4 font-medium text-gray-800">{terminal.Name}</TableCell><TableCell className="px-5 py-4 text-gray-600">{branches.find((branch) => branch.BranchId === terminal.BranchId)?.Description ?? "-"}</TableCell><TableCell className="px-5 py-4 text-gray-600">{terminal.Description || "-"}</TableCell><TableCell className="px-5 py-4"><Badge size="sm" color={terminal.IsActive ? "success" : "error"}>{terminal.IsActive ? "Active" : "Inactive"}</Badge></TableCell><TableCell className="px-5 py-4"><div className="flex gap-2"><button onClick={() => { setEditing(terminal); setForm({ BranchId: String(terminal.BranchId), Name: terminal.Name, Description: terminal.Description ?? "", IsActive: terminal.IsActive ? "1" : "0" }); setIsOpen(true); }} className="rounded-lg bg-blue-500 px-3 py-1.5 text-xs text-white">Edit</button><button onClick={() => setDeleting(terminal)} className="rounded-lg bg-red-500 px-3 py-1.5 text-xs text-white">Delete</button></div></TableCell></TableRow>) : <TableRow><TableCell colSpan={5} className="py-10 text-center text-gray-500">No terminals found.</TableCell></TableRow>}</TableBody></Table></div></div>}
+    <Modal isOpen={isOpen} title={editing ? "Edit Terminal" : "Add Terminal"} onClose={close} onConfirm={save} confirmText={editing ? "Update Terminal" : "Save Terminal"} width="md"><div className="space-y-5"><div><label className="mb-2 block text-sm font-medium">Branch</label><select value={form.BranchId} onChange={(event) => setForm((current) => ({ ...current, BranchId: event.target.value }))} className="w-full rounded-lg border px-4 py-2"><option value="">Select Branch</option>{branches.map((branch) => <option key={branch.BranchId} value={branch.BranchId}>{branch.Description}</option>)}</select></div><div><label className="mb-2 block text-sm font-medium">Terminal Name</label><input value={form.Name} onChange={(event) => setForm((current) => ({ ...current, Name: event.target.value }))} className="w-full rounded-lg border px-4 py-2" /></div><div><label className="mb-2 block text-sm font-medium">Description</label><textarea rows={3} value={form.Description} onChange={(event) => setForm((current) => ({ ...current, Description: event.target.value }))} className="w-full rounded-lg border px-4 py-2" /></div>{editing && <div><label className="mb-2 block text-sm font-medium">Active</label><select value={form.IsActive} onChange={(event) => setForm((current) => ({ ...current, IsActive: event.target.value }))} className="w-full rounded-lg border px-4 py-2"><option value="1">Yes</option><option value="0">No</option></select></div>}</div></Modal>
+    <Modal isOpen={!!deleting} title="Delete Terminal" onClose={() => setDeleting(null)} onConfirm={remove} confirmText="Delete" confirmColor="danger" width="sm"><p>Delete <strong>{deleting?.Name}</strong>?</p></Modal>
+  </div>;
 }
