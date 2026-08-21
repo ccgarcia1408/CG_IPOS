@@ -14,6 +14,11 @@ const barangayRoutes = require("./barangay.routes");
 const paymentMethodRoutes = require("./payment-method.routes");
 const categoryRoutes = require("./category.routes");
 const supplierRoutes = require("./supplier.routes");
+const inventoryRoutes = require("./inventory.routes");
+const roleRoutes = require("./role.routes");
+const purchaseRoutes = require("./purchase.routes");
+const saleRoutes = require("./sale.routes");
+const officialReceiptAssignmentRoutes = require("./officialReceiptAssignment.routes");
 
 router.use("/login", loginRoutes);
 
@@ -40,5 +45,15 @@ router.use("/payment-methods", paymentMethodRoutes);
 router.use("/categories", categoryRoutes);
 
 router.use("/suppliers", supplierRoutes);
+
+router.use("/inventory", inventoryRoutes);
+
+router.use("/roles", roleRoutes);
+
+router.use("/purchases", purchaseRoutes);
+
+router.use("/sales", saleRoutes);
+
+router.use("/or-assignments", officialReceiptAssignmentRoutes);
 
 module.exports = router;

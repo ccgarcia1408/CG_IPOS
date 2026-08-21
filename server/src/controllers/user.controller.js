@@ -3,8 +3,7 @@ const ApiResponse = require("../utils/ApiResponse");
 const asyncHandler = require("../utils/asyncHandler");
 
 const createUser = asyncHandler(async (req, res) => {
-  // console.log("req.body:", req.body);
-  const user = await UserService.createUser(req.body);
+  const user = await UserService.createUser(req.body, req.user?.UserId ?? null);
   res.status(201).json(new ApiResponse(201, "User created successfully", user));
 });
 
@@ -19,12 +18,12 @@ const getUserById = asyncHandler(async (req, res) => {
 });
 
 const updateUser = asyncHandler(async (req, res) => {
-  const user = await UserService.updateUser(Number(req.params.id), req.body);
+  const user = await UserService.updateUser(Number(req.params.id), req.body, req.user.UserId);
   res.status(200).json(new ApiResponse(200, "User updated successfully", user));
 });
 
 const deleteUser = asyncHandler(async (req, res) => {
-  await UserService.deleteUser(Number(req.params.id));
+  await UserService.deleteUser(Number(req.params.id), req.user.UserId);
   res.status(200).json(new ApiResponse(200, "User deleted successfully"));
 });
 

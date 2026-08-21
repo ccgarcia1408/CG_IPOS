@@ -2,18 +2,44 @@ const UserModel = require("../models/user.model");
 const ApiError = require("../utils/ApiError");
 const bcrypt = require("bcrypt");
 
+// sp_users_create/update/delete raise business errors via SIGNAL SQLSTATE '45000', which
+// mysql2 surfaces as a generic Error (no statusCode). Translate the known messages to the
+// correct HTTP status instead of letting them fall through to a bare 500.
+const KNOWN_SIGNAL_STATUSES = {
+  "Email already exists.": 409,
+  "Username already exists.": 409,
+  "User not found.": 404,
+  "Selected role is invalid or inactive.": 400,
+  "User not found or already deleted.": 404
+};
+
+function translateSignalError(error) {
+  const statusCode = KNOWN_SIGNAL_STATUSES[error.sqlMessage || error.message];
+  if (statusCode) {
+    return new ApiError(statusCode, error.sqlMessage || error.message);
+  }
+  return error;
+}
+
 const UserService = {
-  async createUser(data) {
+  async createUser(data, createdBy) {
     const existingEmail = await UserModel.findByEmail(data.Email);
-    
+
     if (existingEmail) {
       throw new ApiError(409, "Email already exists");
     }
 
-    data.Password = await bcrypt.hash(data.Password, 10);
+    const hashedPassword = await bcrypt.hash(data.Password, 10);
 
-    const insertId = await UserModel.create(data);
-    return await UserModel.findById(insertId);
+    try {
+      const insertId = await UserModel.create(
+        { ...data, Password: hashedPassword },
+        createdBy
+      );
+      return await UserModel.findById(insertId);
+    } catch (error) {
+      throw translateSignalError(error);
+    }
   },
 
   async getUsers() {
@@ -28,7 +54,7 @@ const UserService = {
     return user;
   },
 
-  async updateUser(userId, data) {
+  async updateUser(userId, data, updatedBy) {
     const existingUser = await UserModel.findById(userId);
     if (!existingUser) {
       throw new ApiError(404, "User not found");
@@ -41,17 +67,44 @@ const UserService = {
       }
     }
 
-    await UserModel.update(userId, data);
+    const hashedPassword = data.Password ? await bcrypt.hash(data.Password, 10) : null;
+
+    const payload = {
+      FirstName: data.FirstName ?? existingUser.FirstName,
+      MiddleName: data.MiddleName ?? existingUser.MiddleName,
+      LastName: data.LastName ?? existingUser.LastName,
+      Email: data.Email ?? existingUser.Email,
+      Age: data.Age ?? existingUser.Age,
+      Address: data.Address ?? existingUser.Address,
+      ContactNo: data.ContactNo ?? existingUser.ContactNo,
+      Username: data.Username ?? existingUser.Username,
+      Password: hashedPassword,
+      RoleId: data.RoleId ?? existingUser.RoleId,
+      IsActive: data.IsActive ?? (existingUser.IsActive ? 1 : 0),
+      IsAccountVerified: data.IsAccountVerified ?? (existingUser.IsAccountVerified ? 1 : 0)
+    };
+
+    try {
+      await UserModel.update(userId, payload, updatedBy);
+    } catch (error) {
+      throw translateSignalError(error);
+    }
+
     return await UserModel.findById(userId);
   },
 
-  async deleteUser(userId) {
+  async deleteUser(userId, deletedBy) {
     const existingUser = await UserModel.findById(userId);
     if (!existingUser) {
       throw new ApiError(404, "User not found");
     }
 
-    await UserModel.delete(userId);
+    try {
+      await UserModel.delete(userId, deletedBy);
+    } catch (error) {
+      throw translateSignalError(error);
+    }
+
     return true;
   }
 };

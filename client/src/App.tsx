@@ -26,7 +26,12 @@ import BranchMaintenance from "./pages/References/BranchMaintenance";
 import PaymentMethodMaintenance from "./pages/References/PaymentMethodMaintenance";
 import SupplierMaintenance from "./pages/References/SupplierMaintenance";
 import TerminalMaintenance from "./pages/References/TerminalMaintenance";
+import Products from "./pages/Main/Products";
 import Inventory from "./pages/Main/Inventory";
+import Purchasing from "./pages/Main/Purchasing";
+import POS from "./pages/Main/POS";
+import SalesHistory from "./pages/Main/SalesHistory";
+import OfficialReceiptAssignment from "./pages/References/OfficialReceiptAssignment";
 import { Toaster } from "sonner";
 
 export default function App() {
@@ -53,10 +58,15 @@ export default function App() {
             <Route path="/branch-maintenance" element={<BranchMaintenance />} />
             <Route path="/payment-method-maintenance" element={<PaymentMethodMaintenance />} /> 
             <Route path="/supplier-maintenance" element={<SupplierMaintenance />} /> 
-            <Route path="/terminal-maintenance" element={<TerminalMaintenance />} /> 
+            <Route path="/terminal-maintenance" element={<TerminalMaintenance />} />
+            <Route path="/or-assignment-maintenance" element={<OfficialReceiptAssignment />} />
 
             {/* Main Pages Links */}
-            <Route path="/inventory" element={<Inventory />} />  
+            <Route path="/products" element={<Products />} />
+            <Route path="/inventory" element={<Inventory />} />
+            <Route path="/purchasing" element={<Purchasing />} />
+            <Route path="/pos" element={<POS />} />
+            <Route path="/sales-history" element={<SalesHistory />} />
             
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />

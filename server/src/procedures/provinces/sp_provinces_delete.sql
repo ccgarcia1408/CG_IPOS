@@ -2,10 +2,10 @@ DELIMITER $$
 
 USE `cg_ipos_db`$$
 
-DROP PROCEDURE IF EXISTS `sp_sale_items_delete`$$
+DROP PROCEDURE IF EXISTS `sp_provinces_delete`$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_sale_items_delete`(
-    IN p_SaleItemId INT,
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_provinces_delete`(
+    IN p_ProvinceId INT,
     IN p_DeletedBy INT
 )
 BEGIN
@@ -18,31 +18,29 @@ BEGIN
 
         SELECT
             0 AS Success,
-            'Failed to delete sale item.' AS Message;
+            'Failed to delete province.' AS Message;
     END;
 
     START TRANSACTION;
 
     -- OLD VALUE
     SELECT JSON_OBJECT(
-        'ProductId', ProductId,
-        'Quantity', Quantity,
-        'Price', Price,
-        'Discount', Discount,
-        'Total', Total,
+        'RegionId', RegionId,
+        'Name', `Name`,
+        'IsActive', IsActive,
         'IsDeleted', IsDeleted
     )
     INTO v_OldValue
-    FROM sale_items
-    WHERE SaleItemId = p_SaleItemId;
+    FROM provinces
+    WHERE ProvinceId = p_ProvinceId;
 
     -- SOFT DELETE
-    UPDATE sale_items
+    UPDATE provinces
     SET
         IsDeleted = 1,
         DeletedBy = p_DeletedBy,
         DateDeleted = NOW()
-    WHERE SaleItemId = p_SaleItemId
+    WHERE ProvinceId = p_ProvinceId
     AND IsDeleted = 0;
 
     -- AUDIT LOG
@@ -57,9 +55,9 @@ BEGIN
     )
     VALUES (
         'DELETE',
-        'Deleted sale item',
-        'sale_items',
-        p_SaleItemId,
+        'Deleted province',
+        'provinces',
+        p_ProvinceId,
         v_OldValue,
         JSON_OBJECT(
             'IsDeleted', 1
@@ -71,7 +69,7 @@ BEGIN
 
     SELECT
         1 AS Success,
-        'Sale item deleted successfully.' AS Message;
+        'Province deleted successfully.' AS Message;
 
 END$$
 

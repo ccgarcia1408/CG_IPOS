@@ -4,6 +4,10 @@ USE `cg_ipos_db`$$
 
 DROP PROCEDURE IF EXISTS `sp_branches_delete`$$
 
+-- Branches are referenced by RESTRICT FKs from terminals, categories, inventories,
+-- inventory_logs, and (from Phase 4 on) purchases/sales. getById filters on IsDeleted, so a
+-- true soft-delete would make a branch permanently unfetchable by ID once anything historical
+-- references it. "Delete" therefore deactivates, matching sp_products_delete's precedent.
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_branches_delete`(
     IN p_BranchId INT,
     IN p_DeletedBy INT
@@ -18,7 +22,7 @@ BEGIN
 
         SELECT
             0 AS Success,
-            'Failed to delete branch.' AS Message;
+            'Failed to deactivate branch.' AS Message;
     END;
 
     START TRANSACTION;
@@ -34,12 +38,12 @@ BEGIN
     FROM branches
     WHERE BranchId = p_BranchId;
 
-    -- SOFT DELETE
+    -- DEACTIVATE
     UPDATE branches
     SET
-        IsDeleted = 1,
-        DeletedBy = p_DeletedBy,
-        DateDeleted = NOW()
+        IsActive = 0,
+        UpdatedAt = NOW(),
+        UpdatedBy = p_DeletedBy
     WHERE BranchId = p_BranchId
     AND IsDeleted = 0;
 
@@ -54,13 +58,13 @@ BEGIN
         CreatedBy
     )
     VALUES (
-        'DELETE',
-        'Deleted branch',
+        'UPDATE',
+        'Deactivated branch',
         'branches',
         p_BranchId,
         v_OldValue,
         JSON_OBJECT(
-            'IsDeleted', 1
+            'IsActive', 0
         ),
         p_DeletedBy
     );
@@ -69,7 +73,7 @@ BEGIN
 
     SELECT
         1 AS Success,
-        'Branch deleted successfully.' AS Message;
+        'Branch deactivated successfully.' AS Message;
 
 END$$
 

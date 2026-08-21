@@ -15,9 +15,11 @@ BEGIN
 	m.Sorting,
 	m.IsActive
     FROM menu_roles mr
-    LEFT JOIN menus m ON mr.MenuId = m.MenuId
+    INNER JOIN menus m ON mr.MenuId = m.MenuId
     WHERE mr.RoleId = p_RoleId
-    ;
+      AND m.IsDeleted = 0
+      AND m.IsActive = 1
+    ORDER BY m.ParentMenuId, m.Sorting, m.MenuId;
 END$$
 
 DELIMITER ;

@@ -8,6 +8,7 @@ import {
 
 import Badge from "../ui/badge/Badge";
 import Modal from "../ui/modal/Modal";
+import SearchableSelect from "../form/SearchableSelect";
 
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -15,6 +16,7 @@ import { toast } from "sonner";
 import { api } from "../../services/api";
 
 import { User } from "../../types/User";
+import { Role } from "../../types/Role";
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (typeof error === "object" && error !== null && "response" in error) {
@@ -34,6 +36,7 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 
 export default function UserMaintenanceForm() {
   const [users, setUsers] = useState<User[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
 
   // MODAL STATES
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -54,6 +57,9 @@ export default function UserMaintenanceForm() {
     Address: "",
     ContactNo: "",
     Password: "",
+    RoleId: "",
+    IsActive: true,
+    IsAccountVerified: true,
   });
 
   // SEARCH
@@ -65,6 +71,13 @@ export default function UserMaintenanceForm() {
 
   useEffect(() => {
     loadUsers();
+
+    api
+      .get<{ data: Role[] }>("/api/roles/active", { auth: true })
+      .then((response) => setRoles(response.data ?? []))
+      .catch((error: unknown) =>
+        toast.error(getErrorMessage(error, "Failed to load roles."))
+      );
   }, []);
 
   const loadUsers = async () => {
@@ -99,6 +112,9 @@ export default function UserMaintenanceForm() {
       Address: "",
       ContactNo: "",
       Password: "",
+      RoleId: "",
+      IsActive: true,
+      IsAccountVerified: true,
     });
   };
 
@@ -120,6 +136,11 @@ export default function UserMaintenanceForm() {
 
     if (!form.Email.trim()) {
       toast.error("Email is required.");
+      return false;
+    }
+
+    if (!form.RoleId) {
+      toast.error("Role is required.");
       return false;
     }
 
@@ -147,6 +168,7 @@ export default function UserMaintenanceForm() {
           Address: form.Address.trim() || null,
           ContactNo: form.ContactNo.trim() || null,
           Password: form.Password,
+          RoleId: Number(form.RoleId),
         },
         {
           auth: true,
@@ -181,6 +203,9 @@ export default function UserMaintenanceForm() {
         Address: form.Address.trim() || null,
         ContactNo: form.ContactNo.trim() || null,
         ...(form.Password ? { Password: form.Password } : {}),
+        RoleId: Number(form.RoleId),
+        IsActive: form.IsActive ? 1 : 0,
+        IsAccountVerified: form.IsAccountVerified ? 1 : 0,
       };
 
       await api.put(
@@ -227,12 +252,12 @@ export default function UserMaintenanceForm() {
   };
 
     const activeCount = useMemo(
-    () => users.filter((user) => user.IsActive !== false).length,
+    () => users.filter((user) => Number(user.IsActive) === 1).length,
     [users]
   );
 
   const inactiveCount = useMemo(
-    () => users.filter((user) => user.IsActive === false).length,
+    () => users.filter((user) => Number(user.IsActive) !== 1).length,
     [users]
   );
 
@@ -338,7 +363,7 @@ export default function UserMaintenanceForm() {
           ["New This Month", latestThisMonthCount, "text-blue-600"],
         ].map(([label, value, color]) => (
           <div key={String(label)} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]">
-            <p className="text-sm text-gray-500">{label}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
             <h3 className={`mt-2 text-2xl font-bold ${color}`}>{value}</h3>
           </div>
         ))}
@@ -346,7 +371,7 @@ export default function UserMaintenanceForm() {
 
       <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]">
         <div className="relative">
-          <input type="text" placeholder="Search users..." value={search} onChange={(event) => setSearch(event.target.value)} className="w-full rounded-lg border border-gray-300 py-2 pl-4 pr-16 text-sm" />
+          <input type="text" placeholder="Search users..." value={search} onChange={(event) => setSearch(event.target.value)} className="w-full rounded-lg border border-gray-300 py-2 pl-4 pr-16 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white" />
           {search && <button type="button" onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-3 py-1 text-xs font-medium text-red-500 transition hover:bg-gray-100 hover:text-gray-700">Clear</button>}
         </div>
       </div>
@@ -357,43 +382,62 @@ export default function UserMaintenanceForm() {
           <div className="max-w-full overflow-x-auto">
             <Table>
               <TableHeader className="bg-gray-50 dark:bg-gray-900/30"><TableRow>
-                {['Username', 'Name', 'Email', 'Contact No.', 'Status', 'Actions'].map((header) => <TableCell key={header} isHeader className={`px-5 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500 ${header === 'Actions' ? 'text-center' : 'text-start'}`}>{header}</TableCell>)}
+                {['Username', 'Name', 'Email', 'Contact No.', 'Role', 'Status', 'Actions'].map((header) => <TableCell key={header} isHeader>{header}</TableCell>)}
               </TableRow></TableHeader>
               <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
                 {paginatedUsers.length ? paginatedUsers.map((user) => {
                   const name = [user.FirstName, user.MiddleName, user.LastName].filter(Boolean).join(" ");
+                  const isActive = Number(user.IsActive) === 1;
+                  const isVerified = Number(user.IsAccountVerified) === 1;
                   return <TableRow key={user.UserId} className="transition hover:bg-gray-50 dark:hover:bg-white/[0.02]">
                     <TableCell className="px-5 py-4 font-medium text-gray-800 dark:text-white">{user.Username}</TableCell>
                     <TableCell className="px-5 py-4 text-gray-600 dark:text-gray-400">{name}</TableCell>
                     <TableCell className="px-5 py-4 text-gray-600 dark:text-gray-400">{user.Email}</TableCell>
                     <TableCell className="px-5 py-4 text-gray-600 dark:text-gray-400">{user.ContactNo || "-"}</TableCell>
-                    <TableCell className="px-5 py-4"><Badge size="sm" color={user.IsActive !== false ? "success" : "error"}>{user.IsActive !== false ? 'Active' : 'Inactive'}</Badge></TableCell>
+                    <TableCell className="px-5 py-4 text-gray-600 dark:text-gray-400">{user.RoleName || <span className="text-red-500">No role</span>}</TableCell>
+                    <TableCell className="px-5 py-4"><div className="flex flex-col gap-1"><Badge size="sm" color={isActive ? "success" : "error"}>{isActive ? 'Active' : 'Inactive'}</Badge>{!isVerified && <Badge size="sm" color="warning">Unverified</Badge>}</div></TableCell>
                     <TableCell className="px-5 py-4"><div className="flex items-center justify-center gap-2">
-                      <button onClick={() => { setEditingUser(user); setForm({ FirstName: user.FirstName || '', MiddleName: user.MiddleName || '', LastName: user.LastName || '', Username: user.Username || '', Email: user.Email || '', Age: user.Age?.toString() || '', Address: user.Address || '', ContactNo: user.ContactNo || '', Password: '' }); setIsAddOpen(true); }} className="rounded-lg bg-blue-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-600">Edit</button>
+                      <button onClick={() => { setEditingUser(user); setForm({ FirstName: user.FirstName || '', MiddleName: user.MiddleName || '', LastName: user.LastName || '', Username: user.Username || '', Email: user.Email || '', Age: user.Age?.toString() || '', Address: user.Address || '', ContactNo: user.ContactNo || '', Password: '', RoleId: user.RoleId ? String(user.RoleId) : '', IsActive: Number(user.IsActive) === 1, IsAccountVerified: Number(user.IsAccountVerified) === 1 }); setIsAddOpen(true); }} className="rounded-lg bg-blue-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-600">Edit</button>
                       <button onClick={() => setDeletingUser(user)} className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600">Delete</button>
                     </div></TableCell>
                   </TableRow>;
-                }) : <TableRow><TableCell colSpan={6} className="py-10 text-center text-gray-500">No users found.</TableCell></TableRow>}
+                }) : <TableRow><TableCell colSpan={7} className="py-10 text-center text-gray-500 dark:text-gray-400">No users found.</TableCell></TableRow>}
               </TableBody>
             </Table>
           </div>
           <div className="flex flex-col items-center justify-between gap-4 border-t border-gray-100 px-5 py-4 dark:border-white/[0.05] md:flex-row">
-            <span className="text-sm text-gray-500">Showing {filteredUsers.length ? (currentPage - 1) * pageSize + 1 : 0} to {Math.min(currentPage * pageSize, filteredUsers.length)} of {filteredUsers.length} {filteredUsers.length === 1 ? 'entry' : 'entries'}</span>
-            <div className="flex items-center gap-2"><button onClick={handlePrevious} disabled={currentPage === 1} className="rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400">Previous</button>{Array.from({ length: totalPages }, (_, index) => <button key={index + 1} onClick={() => setCurrentPage(index + 1)} className={`h-9 w-9 rounded-lg text-sm font-medium ${currentPage === index + 1 ? 'bg-brand-500 text-white' : 'border border-gray-300 hover:bg-gray-100'}`}>{index + 1}</button>)}<button onClick={handleNext} disabled={currentPage === totalPages} className="rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400">Next</button></div>
-            <select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setCurrentPage(1); }} className="rounded-lg border border-gray-300 px-3 py-2 text-sm"><option value={5}>5</option><option value={10}>10</option><option value={20}>20</option><option value={50}>50</option></select>
+            <span className="text-sm text-gray-500 dark:text-gray-400">Showing {filteredUsers.length ? (currentPage - 1) * pageSize + 1 : 0} to {Math.min(currentPage * pageSize, filteredUsers.length)} of {filteredUsers.length} {filteredUsers.length === 1 ? 'entry' : 'entries'}</span>
+            <div className="flex items-center gap-2"><button onClick={handlePrevious} disabled={currentPage === 1} className="rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 dark:border-white/10 dark:text-gray-300 dark:disabled:border-white/5">Previous</button>{Array.from({ length: totalPages }, (_, index) => <button key={index + 1} onClick={() => setCurrentPage(index + 1)} className={`h-9 w-9 rounded-lg text-sm font-medium ${currentPage === index + 1 ? 'bg-brand-500 text-white' : 'border border-gray-300 hover:bg-gray-100 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/5'}`}>{index + 1}</button>)}<button onClick={handleNext} disabled={currentPage === totalPages} className="rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 dark:border-white/10 dark:text-gray-300 dark:disabled:border-white/5">Next</button></div>
+            <select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setCurrentPage(1); }} className="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-gray-300"><option value={5}>5</option><option value={10}>10</option><option value={20}>20</option><option value={50}>50</option></select>
           </div>
         </div>
       )}
 
       <Modal isOpen={isAddOpen} title={editingUser ? 'Edit User' : 'Add User'} onClose={() => { setIsAddOpen(false); setEditingUser(null); resetForm(); }} onConfirm={editingUser ? handleUpdate : handleSubmit} confirmText={editingUser ? 'Update User' : 'Save User'} width="xl">
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          {([['FirstName', 'First Name', 'text'], ['MiddleName', 'Middle Name', 'text'], ['LastName', 'Last Name', 'text'], ['Username', 'Username', 'text'], ['Email', 'Email', 'email'], ['Age', 'Age', 'number'], ['ContactNo', 'Contact Number', 'tel'], ['Password', editingUser ? 'New Password (optional)' : 'Password', 'password']] as const).map(([field, label, type]) => <div key={field}><label className="mb-2 block text-sm font-medium">{label}</label><input type={type} min={field === 'Age' ? 1 : undefined} className="w-full rounded-lg border px-4 py-2" value={form[field]} onChange={(event) => setForm((current) => ({ ...current, [field]: event.target.value }))} /></div>)}
-          <div className="md:col-span-2"><label className="mb-2 block text-sm font-medium">Address</label><textarea rows={3} className="w-full rounded-lg border px-4 py-2" value={form.Address} onChange={(event) => setForm((current) => ({ ...current, Address: event.target.value }))} /></div>
+          {([['FirstName', 'First Name', 'text'], ['MiddleName', 'Middle Name', 'text'], ['LastName', 'Last Name', 'text'], ['Username', 'Username', 'text'], ['Email', 'Email', 'email'], ['Age', 'Age', 'number'], ['ContactNo', 'Contact Number', 'tel'], ['Password', editingUser ? 'New Password (optional)' : 'Password', 'password']] as const).map(([field, label, type]) => <div key={field}><label className="mb-2 block text-sm font-medium">{label}</label><input type={type} min={field === 'Age' ? 1 : undefined} className="w-full rounded-lg border px-4 py-2 dark:border-white/10 dark:bg-white/5 dark:text-white" value={form[field]} onChange={(event) => setForm((current) => ({ ...current, [field]: event.target.value }))} /></div>)}
+          <div>
+            <label className="mb-2 block text-sm font-medium">Role</label>
+            <SearchableSelect placeholder="Select a role..." value={form.RoleId} onChange={(v) => setForm((current) => ({ ...current, RoleId: v }))} options={roles.map((role) => ({ value: String(role.RoleId), label: role.Name }))} />
+          </div>
+          <div className="md:col-span-2"><label className="mb-2 block text-sm font-medium">Address</label><textarea rows={3} className="w-full rounded-lg border px-4 py-2 dark:border-white/10 dark:bg-white/5 dark:text-white" value={form.Address} onChange={(event) => setForm((current) => ({ ...current, Address: event.target.value }))} /></div>
+          {editingUser && (
+            <div className="md:col-span-2 flex flex-wrap gap-6">
+              <label className="flex items-center gap-2 text-sm font-medium">
+                <input type="checkbox" checked={form.IsActive} onChange={(event) => setForm((current) => ({ ...current, IsActive: event.target.checked }))} />
+                Active
+              </label>
+              <label className="flex items-center gap-2 text-sm font-medium">
+                <input type="checkbox" checked={form.IsAccountVerified} onChange={(event) => setForm((current) => ({ ...current, IsAccountVerified: event.target.checked }))} />
+                Verified
+              </label>
+            </div>
+          )}
         </div>
       </Modal>
 
       <Modal isOpen={!!deletingUser} title="Delete User" onClose={() => setDeletingUser(null)} onConfirm={handleDelete} confirmText="Delete" confirmColor="danger" width="sm">
-        <div className="space-y-4"><p className="text-sm text-gray-600 dark:text-gray-300">Are you sure you want to delete this user?</p><div className="rounded-lg border border-red-200 bg-red-50 p-4"><p className="font-semibold text-red-700">{[deletingUser?.FirstName, deletingUser?.MiddleName, deletingUser?.LastName].filter(Boolean).join(' ')}</p><p className="mt-1 text-sm text-red-600">Username: {deletingUser?.Username}</p></div><p className="text-sm text-gray-500">This action cannot be undone.</p></div>
+        <div className="space-y-4"><p className="text-sm text-gray-600 dark:text-gray-300">Are you sure you want to delete this user?</p><div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-500/30 dark:bg-red-500/10"><p className="font-semibold text-red-700 dark:text-red-400">{[deletingUser?.FirstName, deletingUser?.MiddleName, deletingUser?.LastName].filter(Boolean).join(' ')}</p><p className="mt-1 text-sm text-red-600 dark:text-red-400">Username: {deletingUser?.Username}</p></div><p className="text-sm text-gray-500 dark:text-gray-400">This action cannot be undone.</p></div>
       </Modal>
     </div>
   );

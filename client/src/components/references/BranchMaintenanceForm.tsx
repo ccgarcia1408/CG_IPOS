@@ -7,6 +7,7 @@ import {
 } from "../ui/table";
 
 import Badge from "../ui/badge/Badge";
+import SearchableSelect from "../form/SearchableSelect";
 
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../../services/api";
@@ -30,9 +31,9 @@ export default function BranchMaintenanceForm() {
 
   // LOADING STATE
   const [loadingBranches, setLoadingBranches] = useState(true);
-  const [loadingProvinces, setLoadingProvinces] = useState(false);
-  const [loadingMunicipalities, setLoadingMunicipalities] = useState(false);
-  const [loadingBarangays, setLoadingBarangays] = useState(false);
+  const [, setLoadingProvinces] = useState(false);
+  const [, setLoadingMunicipalities] = useState(false);
+  const [, setLoadingBarangays] = useState(false);
 
   // FORM STATE
   const [form, setForm] = useState({
@@ -444,7 +445,7 @@ export default function BranchMaintenanceForm() {
         }
       );
 
-      toast.success("Branch deleted successfully.", {
+      toast.success("Branch deactivated successfully.", {
         id: "branch-success",
       });
 
@@ -487,26 +488,26 @@ export default function BranchMaintenanceForm() {
       {/* STATISTICS */}
       <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]">
-          <p className="text-sm text-gray-500">Total Branches</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Total Branches</p>
           <h3 className="mt-2 text-2xl font-bold">{branches.length}</h3>
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]">
-          <p className="text-sm text-gray-500">Active</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
           <h3 className="mt-2 text-2xl font-bold text-green-600">
             {activeCount}
           </h3>
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]">
-          <p className="text-sm text-gray-500">Inactive</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Inactive</p>
           <h3 className="mt-2 text-2xl font-bold text-red-600">
             {inactiveCount}
           </h3>
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]">
-          <p className="text-sm text-gray-500">New This Month</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">New This Month</p>
           <h3 className="mt-2 text-2xl font-bold text-blue-600">
             {latestThisMonthCount}
           </h3>
@@ -521,14 +522,14 @@ export default function BranchMaintenanceForm() {
             placeholder="Search branch..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 py-2 pl-4 pr-10 text-sm"
+            className="w-full rounded-lg border border-gray-300 py-2 pl-4 pr-10 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white"
           />
 
           {search && (
             <button
               type="button"
               onClick={() => setSearch("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-3 py-1 text-xs font-medium text-red-500 transition hover:bg-gray-100 hover:text-gray-700"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-3 py-1 text-xs font-medium text-red-500 transition hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/5"
             >
               Clear
             </button>
@@ -551,47 +552,12 @@ export default function BranchMaintenanceForm() {
             <Table>
               <TableHeader className="bg-gray-50 dark:bg-gray-900/30">
                 <TableRow>
-                  <TableCell
-                    isHeader
-                    className="px-5 py-4 text-start text-xs font-semibold uppercase tracking-wider text-gray-500"
-                  >
-                    Branch Code
-                  </TableCell>
-
-                  <TableCell
-                    isHeader
-                    className="px-5 py-4 text-start text-xs font-semibold uppercase tracking-wider text-gray-500"
-                  >
-                    Branch Name
-                  </TableCell>
-
-                  <TableCell
-                    isHeader
-                    className="px-5 py-4 text-start text-xs font-semibold uppercase tracking-wider text-gray-500"
-                  >
-                    Contact No.
-                  </TableCell>
-
-                  <TableCell
-                    isHeader
-                    className="px-5 py-4 text-start text-xs font-semibold uppercase tracking-wider text-gray-500"
-                  >
-                    Address
-                  </TableCell>
-
-                  <TableCell
-                    isHeader
-                    className="px-5 py-4 text-start text-xs font-semibold uppercase tracking-wider text-gray-500"
-                  >
-                    Status
-                  </TableCell>
-
-                  <TableCell
-                    isHeader
-                    className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-500"
-                  >
-                    Actions
-                  </TableCell>
+                  <TableCell isHeader>Branch Code</TableCell>
+                  <TableCell isHeader>Branch Name</TableCell>
+                  <TableCell isHeader>Contact No.</TableCell>
+                  <TableCell isHeader>Address</TableCell>
+                  <TableCell isHeader>Status</TableCell>
+                  <TableCell isHeader>Actions</TableCell>
                 </TableRow>
               </TableHeader>
 
@@ -612,7 +578,7 @@ export default function BranchMaintenanceForm() {
                             {branch.Description}
                           </div>
 
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
                             Branch Information
                           </div>
                         </div>
@@ -678,7 +644,7 @@ export default function BranchMaintenanceForm() {
                   <TableRow>
                     <TableCell
                       colSpan={6}
-                      className="py-10 text-center text-gray-500"
+                      className="py-10 text-center text-gray-500 dark:text-gray-400"
                     >
                       No branches found.
                     </TableCell>
@@ -690,7 +656,7 @@ export default function BranchMaintenanceForm() {
 
           {/* Footer */}
           <div className="flex flex-col items-center justify-between gap-4 border-t border-gray-100 px-5 py-4 dark:border-white/[0.05] md:flex-row">
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
               Showing{" "}
               {filteredBranches.length === 0
                 ? 0
@@ -707,8 +673,8 @@ export default function BranchMaintenanceForm() {
                 disabled={currentPage === 1}
                 className={`rounded-lg border px-3 py-2 text-sm transition ${
                   currentPage === 1
-                    ? "cursor-not-allowed border-gray-200 text-gray-400"
-                    : "border-gray-300 hover:bg-gray-100"
+                    ? "cursor-not-allowed border-gray-200 text-gray-400 dark:border-white/5 dark:text-gray-500"
+                    : "border-gray-300 hover:bg-gray-100 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/5"
                 }`}
               >
                 Previous
@@ -721,7 +687,7 @@ export default function BranchMaintenanceForm() {
                   className={`h-9 w-9 rounded-lg text-sm font-medium transition ${
                     currentPage === index + 1
                       ? "bg-brand-500 text-white"
-                      : "border border-gray-300 hover:bg-gray-100"
+                      : "border border-gray-300 hover:bg-gray-100 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/5"
                   }`}
                 >
                   {index + 1}
@@ -733,8 +699,8 @@ export default function BranchMaintenanceForm() {
                 disabled={currentPage === totalPages}
                 className={`rounded-lg border px-3 py-2 text-sm transition ${
                   currentPage === totalPages
-                    ? "cursor-not-allowed border-gray-200 text-gray-400"
-                    : "border-gray-300 hover:bg-gray-100"
+                    ? "cursor-not-allowed border-gray-200 text-gray-400 dark:border-white/5 dark:text-gray-500"
+                    : "border-gray-300 hover:bg-gray-100 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/5"
                 }`}
               >
                 Next
@@ -747,7 +713,7 @@ export default function BranchMaintenanceForm() {
                 setPageSize(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-gray-300"
             >
               <option value={5}>5</option>
               <option value={10}>10</option>
@@ -780,7 +746,7 @@ export default function BranchMaintenanceForm() {
                 </label>
 
                 <input
-                    className="w-full rounded-lg border px-4 py-2"
+                    className="w-full rounded-lg border px-4 py-2 dark:border-white/10 dark:bg-white/5 dark:text-white"
                     value={form.Name}
                     onChange={(e) =>
                         setForm({
@@ -798,7 +764,7 @@ export default function BranchMaintenanceForm() {
                 </label>
 
                 <input
-                    className="w-full rounded-lg border px-4 py-2"
+                    className="w-full rounded-lg border px-4 py-2 dark:border-white/10 dark:bg-white/5 dark:text-white"
                     value={form.Description}
                     onChange={(e) =>
                         setForm({
@@ -816,7 +782,7 @@ export default function BranchMaintenanceForm() {
                 </label>
 
                 <input
-                    className="w-full rounded-lg border px-4 py-2"
+                    className="w-full rounded-lg border px-4 py-2 dark:border-white/10 dark:bg-white/5 dark:text-white"
                     value={form.ContactNo}
                     onChange={(e) =>
                         setForm({
@@ -833,12 +799,10 @@ export default function BranchMaintenanceForm() {
                     Province
                 </label>
 
-                <select
-                    className="w-full rounded-lg border px-4 py-2"
+                <SearchableSelect
+                    placeholder="Select Province"
                     value={form.ProvinceId}
-                    onChange={(e) => {
-                      const provinceId = e.target.value;
-
+                    onChange={(provinceId) => {
                       setMunicipalities([]);
                       setBarangays([]);
 
@@ -849,18 +813,8 @@ export default function BranchMaintenanceForm() {
                         BarangayId: "",
                       }));
                     }}
-                >
-                    <option value="">Select Province</option>
-
-                    {provinces.map((province) => (
-                        <option
-                            key={province.ProvinceId}
-                            value={province.ProvinceId}
-                        >
-                            {province.Name}
-                        </option>
-                    ))}
-                </select>
+                    options={provinces.map((province) => ({ value: String(province.ProvinceId), label: province.Name }))}
+                />
             </div>
 
             {/* Municipality */}
@@ -869,12 +823,11 @@ export default function BranchMaintenanceForm() {
                     Municipality
                 </label>
 
-                <select
-                    className="w-full rounded-lg border px-4 py-2"
+                <SearchableSelect
+                    placeholder="Select Municipality"
+                    disabled={!form.ProvinceId}
                     value={form.MunicipalityId}
-                    onChange={(e) => {
-                      const municipalityId = e.target.value;
-
+                    onChange={(municipalityId) => {
                       setBarangays([]);
 
                       setForm((prev) => ({
@@ -883,18 +836,8 @@ export default function BranchMaintenanceForm() {
                         BarangayId: "",
                       }));
                     }}
-                >
-                    <option value="">Select Municipality</option>
-
-                    {municipalities.map((municipality) => (
-                        <option
-                            key={municipality.MunicipalityId}
-                            value={municipality.MunicipalityId}
-                        >
-                            {municipality.Name}
-                        </option>
-                    ))}
-                </select>
+                    options={municipalities.map((municipality) => ({ value: String(municipality.MunicipalityId), label: municipality.Name }))}
+                />
             </div>
 
             {/* Barangay */}
@@ -903,27 +846,18 @@ export default function BranchMaintenanceForm() {
                     Barangay
                 </label>
 
-                <select
-                    className="w-full rounded-lg border px-4 py-2"
+                <SearchableSelect
+                    placeholder="Select Barangay"
+                    disabled={!form.MunicipalityId}
                     value={form.BarangayId}
-                    onChange={(e) =>
+                    onChange={(barangayId) =>
                         setForm({
                             ...form,
-                            BarangayId: e.target.value,
+                            BarangayId: barangayId,
                         })
                     }
-                >
-                    <option value="">Select Barangay</option>
-
-                    {barangays.map((barangay) => (
-                        <option
-                            key={barangay.BarangayId}
-                            value={barangay.BarangayId}
-                        >
-                            {barangay.Name}
-                        </option>
-                    ))}
-                </select>
+                    options={barangays.map((barangay) => ({ value: String(barangay.BarangayId), label: barangay.Name }))}
+                />
             </div>
 
             {/* Other Address */}
@@ -934,7 +868,7 @@ export default function BranchMaintenanceForm() {
 
                 <textarea
                     rows={3}
-                    className="w-full rounded-lg border px-4 py-2"
+                    className="w-full rounded-lg border px-4 py-2 dark:border-white/10 dark:bg-white/5 dark:text-white"
                     value={form.OtherAddress}
                     onChange={(e) =>
                         setForm({
@@ -953,7 +887,7 @@ export default function BranchMaintenanceForm() {
                 </label>
 
                 <select
-                  className="w-full rounded-lg border px-4 py-2"
+                  className="w-full rounded-lg border px-4 py-2 dark:border-white/10 dark:bg-white/5 dark:text-white"
                   value={form.IsActive}
                   onChange={(e) =>
                     setForm({
@@ -973,30 +907,30 @@ export default function BranchMaintenanceForm() {
       {/* DELETE BRANCH */}
       <Modal
         isOpen={!!deletingBranch}
-        title="Delete Branch"
+        title="Deactivate Branch"
         onClose={() => setDeletingBranch(null)}
         onConfirm={handleDelete}
-        confirmText="Delete"
+        confirmText="Deactivate"
         confirmColor="danger"
         width="sm"
       >
         <div className="space-y-4">
           <p className="text-sm text-gray-600 dark:text-gray-300">
-            Are you sure you want to delete this branch?
+            Are you sure you want to deactivate this branch?
           </p>
 
-          <div className="rounded-lg bg-red-50 border border-red-200 p-4">
-            <p className="font-semibold text-red-700">
+          <div className="rounded-lg bg-red-50 border border-red-200 p-4 dark:border-red-500/30 dark:bg-red-500/10">
+            <p className="font-semibold text-red-700 dark:text-red-400">
               {deletingBranch?.Description}
             </p>
 
-            <p className="mt-1 text-sm text-red-600">
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
               Branch Code: {deletingBranch?.Name}
             </p>
           </div>
 
-          <p className="text-sm text-gray-500">
-            This action cannot be undone.
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            It will stay in the list marked Inactive and can be reactivated later from Edit.
           </p>
         </div>
       </Modal>

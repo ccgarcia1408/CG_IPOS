@@ -5,7 +5,9 @@
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "migrate": "node src/database/migrate.js",
+    "deploy:procedures": "node src/database/deployProcedures.js"
   },
   "keywords": [],
   "author": "",

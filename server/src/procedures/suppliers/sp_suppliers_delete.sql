@@ -4,6 +4,9 @@ USE `cg_ipos_db`$$
 
 DROP PROCEDURE IF EXISTS `sp_suppliers_delete`$$
 
+-- Suppliers are referenced by RESTRICT FK from purchases. getById filters on IsDeleted, so a
+-- true soft-delete would make a supplier permanently unfetchable by ID once any purchase
+-- references it. "Delete" therefore deactivates, matching sp_products_delete's precedent.
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_suppliers_delete`(
     IN p_SupplierId INT,
     IN p_DeletedBy INT
@@ -18,7 +21,7 @@ BEGIN
 
         SELECT
             0 AS Success,
-            'Failed to delete supplier.' AS Message;
+            'Failed to deactivate supplier.' AS Message;
     END;
 
     START TRANSACTION;
@@ -41,12 +44,12 @@ BEGIN
     FROM suppliers
     WHERE SupplierId = p_SupplierId;
 
-    -- SOFT DELETE
+    -- DEACTIVATE
     UPDATE suppliers
     SET
-        IsDeleted = 1,
-        DeletedBy = p_DeletedBy,
-        DateDeleted = NOW()
+        IsActive = 0,
+        UpdatedAt = NOW(),
+        UpdatedBy = p_DeletedBy
     WHERE SupplierId = p_SupplierId
     AND IsDeleted = 0;
 
@@ -61,13 +64,13 @@ BEGIN
         CreatedBy
     )
     VALUES (
-        'DELETE',
-        'Deleted supplier',
+        'UPDATE',
+        'Deactivated supplier',
         'suppliers',
         p_SupplierId,
         v_OldValue,
         JSON_OBJECT(
-            'IsDeleted', 1
+            'IsActive', 0
         ),
         p_DeletedBy
     );
@@ -76,7 +79,7 @@ BEGIN
 
     SELECT
         1 AS Success,
-        'Supplier deleted successfully.' AS Message;
+        'Supplier deactivated successfully.' AS Message;
 
 END$$
 

@@ -57,15 +57,21 @@ const LoginService = {
         await LoginModel.updateLastLogin(username);
 
         const token = jwt.sign(
-            { UserId: user.UserId },
+            { UserId: user.UserId, Username: user.Username, RoleId: user.RoleId },
             process.env.JWT_SECRET,
-            { expiresIn: "1h" }
+            { expiresIn: process.env.JWT_EXPIRES_IN || "1h" }
         );
 
         return {
             token,
             user: mapUser(user)
         };
+    },
+
+    async logout(username) {
+        if (username) {
+            await LoginModel.updateLastLogout(username);
+        }
     },
 
     async getCurrentUser(userId) {

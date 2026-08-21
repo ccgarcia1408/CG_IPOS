@@ -9,7 +9,8 @@ const createUserSchema = Joi.object({
   Address: Joi.string().trim().max(255).allow("", null),
   ContactNo: Joi.string().trim().max(20).allow("", null),
   Username: Joi.string().trim().alphanum().min(3).max(50).required(),
-  Password: Joi.string().trim().min(8).max(255).required()
+  Password: Joi.string().trim().min(8).max(255).required(),
+  RoleId: Joi.number().integer().positive().required()
 });
 
 const updateUserSchema = Joi.object({
@@ -21,7 +22,10 @@ const updateUserSchema = Joi.object({
   Address: Joi.string().trim().max(255).allow("", null),
   ContactNo: Joi.string().trim().max(20).allow("", null),
   Username: Joi.string().trim().alphanum().min(3).max(50),
-  Password: Joi.string().trim().min(8).max(255)
+  Password: Joi.string().trim().min(8).max(255).allow(""),
+  RoleId: Joi.number().integer().positive(),
+  IsActive: Joi.number().integer().valid(0, 1),
+  IsAccountVerified: Joi.number().integer().valid(0, 1)
 }).min(1);
 
 module.exports = {

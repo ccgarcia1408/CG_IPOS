@@ -15,7 +15,8 @@ BEGIN
 	m.Sorting,
 	m.IsActive
     FROM menus m
-    ;
+    WHERE m.IsDeleted = 0
+    ORDER BY m.ParentMenuId, m.Sorting, m.MenuId;
 END$$
 
 DELIMITER ;

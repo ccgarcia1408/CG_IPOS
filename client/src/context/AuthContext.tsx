@@ -26,7 +26,7 @@ type AuthContextType = {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (payload: LoginPayload) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   setUser: (user: UserAuth | null) => void;
 };
 
@@ -40,11 +40,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUserState] = useState<UserAuth | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const logout = () => {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-    setToken(null);
-    setUserState(null);
+  const logout = async () => {
+    try {
+      if (localStorage.getItem(TOKEN_KEY)) {
+        await api.post("/api/auth/logout", undefined, { auth: true });
+      }
+    } catch (error) {
+      // Best-effort: local session state is cleared below regardless of network/API failure.
+      console.error("Failed to notify server of logout:", error);
+    } finally {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+      setToken(null);
+      setUserState(null);
+    }
   };
 
   const setUser = (user: UserAuth | null) => {
