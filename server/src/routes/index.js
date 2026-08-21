@@ -19,6 +19,8 @@ const roleRoutes = require("./role.routes");
 const purchaseRoutes = require("./purchase.routes");
 const saleRoutes = require("./sale.routes");
 const officialReceiptAssignmentRoutes = require("./officialReceiptAssignment.routes");
+const discountRoutes = require("./discount.routes");
+const taxRoutes = require("./tax.routes");
 
 router.use("/login", loginRoutes);
 
@@ -55,5 +57,9 @@ router.use("/purchases", purchaseRoutes);
 router.use("/sales", saleRoutes);
 
 router.use("/or-assignments", officialReceiptAssignmentRoutes);
+
+router.use("/discounts", discountRoutes);
+
+router.use("/taxes", taxRoutes);
 
 module.exports = router;

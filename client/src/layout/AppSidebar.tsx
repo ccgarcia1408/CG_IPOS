@@ -9,6 +9,7 @@ import {
   DocsIcon,
   DollarLineIcon,
   DownloadIcon,
+  FileIcon,
   FolderIcon,
   GridIcon,
   GroupIcon,
@@ -78,6 +79,8 @@ const getIconByName = (iconName?: string): React.ReactNode => {
       return <TaskIcon />;
     case "DocsIcon":
       return <DocsIcon />;
+    case "FileIcon":
+      return <FileIcon />;
     default:
       return <GridIcon />;
   }

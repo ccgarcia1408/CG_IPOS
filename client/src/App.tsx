@@ -32,6 +32,9 @@ import Purchasing from "./pages/Main/Purchasing";
 import POS from "./pages/Main/POS";
 import SalesHistory from "./pages/Main/SalesHistory";
 import OfficialReceiptAssignment from "./pages/References/OfficialReceiptAssignment";
+import DiscountMaintenance from "./pages/References/DiscountMaintenance";
+import TaxMaintenance from "./pages/References/TaxMaintenance";
+import InventoryLogs from "./pages/Main/InventoryLogs";
 import { Toaster } from "sonner";
 
 export default function App() {
@@ -60,10 +63,13 @@ export default function App() {
             <Route path="/supplier-maintenance" element={<SupplierMaintenance />} /> 
             <Route path="/terminal-maintenance" element={<TerminalMaintenance />} />
             <Route path="/or-assignment-maintenance" element={<OfficialReceiptAssignment />} />
+            <Route path="/discount-maintenance" element={<DiscountMaintenance />} />
+            <Route path="/tax-maintenance" element={<TaxMaintenance />} />
 
             {/* Main Pages Links */}
             <Route path="/products" element={<Products />} />
             <Route path="/inventory" element={<Inventory />} />
+            <Route path="/inventory-logs" element={<InventoryLogs />} />
             <Route path="/purchasing" element={<Purchasing />} />
             <Route path="/pos" element={<POS />} />
             <Route path="/sales-history" element={<SalesHistory />} />
