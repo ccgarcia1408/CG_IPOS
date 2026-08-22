@@ -90,6 +90,65 @@ const DashboardModel = {
         );
 
         return rows[0] || [];
+    },
+
+    async getPurchasingSummary(startDate, endDate, branchId) {
+        const [rows] = await pool.query(
+            `CALL sp_dashboard_purchasingSummary(?, ?, ?)`,
+            [startDate, endDate, branchId]
+        );
+
+        return rows[0][0];
+    },
+
+    async getPendingPurchases(branchId) {
+        const [rows] = await pool.query(`CALL sp_dashboard_pendingPurchases(?)`, [branchId]);
+        return rows[0] || [];
+    },
+
+    async getSupplierSummary(startDate, endDate, branchId) {
+        const [rows] = await pool.query(
+            `CALL sp_dashboard_supplierSummary(?, ?, ?)`,
+            [startDate, endDate, branchId]
+        );
+
+        return rows[0] || [];
+    },
+
+    async getCashierPerformance(startDate, endDate, branchId) {
+        const [rows] = await pool.query(
+            `CALL sp_dashboard_cashierPerformance(?, ?, ?)`,
+            [startDate, endDate, branchId]
+        );
+
+        return rows[0] || [];
+    },
+
+    async getVoidedSales(startDate, endDate, branchId) {
+        const [rows] = await pool.query(
+            `CALL sp_dashboard_voidedSales(?, ?, ?)`,
+            [startDate, endDate, branchId]
+        );
+
+        return rows[0] || [];
+    },
+
+    async getStockAdjustmentSummary(startDate, endDate, branchId) {
+        const [rows] = await pool.query(
+            `CALL sp_dashboard_stockAdjustmentSummary(?, ?, ?)`,
+            [startDate, endDate, branchId]
+        );
+
+        return rows[0][0];
+    },
+
+    async getRecentStockAdjustments(startDate, endDate, branchId, limit) {
+        const [rows] = await pool.query(
+            `CALL sp_dashboard_recentStockAdjustments(?, ?, ?, ?)`,
+            [startDate, endDate, branchId, limit]
+        );
+
+        return rows[0] || [];
     }
 };
 

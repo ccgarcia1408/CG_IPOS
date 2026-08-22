@@ -15,22 +15,35 @@ import TopProductsCard from "../../components/dashboard/TopProductsCard";
 import TopCategoriesCard from "../../components/dashboard/TopCategoriesCard";
 import InventoryKpiCards from "../../components/dashboard/InventoryKpiCards";
 import InventoryAlertsCard from "../../components/dashboard/InventoryAlertsCard";
+import PurchasingKpiCards from "../../components/dashboard/PurchasingKpiCards";
+import PendingPurchasesCard from "../../components/dashboard/PendingPurchasesCard";
+import SupplierSummaryCard from "../../components/dashboard/SupplierSummaryCard";
+import CashierPerformanceCard from "../../components/dashboard/CashierPerformanceCard";
+import VoidedSalesCard from "../../components/dashboard/VoidedSalesCard";
+import StockAdjustmentCard from "../../components/dashboard/StockAdjustmentCard";
 import { api } from "../../services/api";
 import {
+  CashierPerformance,
   ExpiringProduct,
   ExpiringThreshold,
   InventorySummary,
   LowStockAlert,
   OutOfStockAlert,
+  PendingPurchase,
+  PurchasingSummary,
+  RecentStockAdjustment,
   SalesByBranch,
   SalesByPaymentMethod,
   SalesByTerminal,
   SalesSummary,
   SalesTrendGranularity,
   SalesTrendPoint,
+  StockAdjustmentSummary,
+  SupplierSummary,
   TopCategory,
   TopProduct,
   TopProductsSortBy,
+  VoidedSale,
 } from "../../types/Dashboard";
 
 const errorMessage = (error: unknown, fallback: string) =>
@@ -90,6 +103,25 @@ export default function Home() {
   const [expiring, setExpiring] = useState<ExpiringProduct[]>([]);
   const [loadingInventoryAlerts, setLoadingInventoryAlerts] = useState(true);
   const [expiringThreshold, setExpiringThreshold] = useState<ExpiringThreshold>(30);
+
+  const [purchasingSummary, setPurchasingSummary] = useState<PurchasingSummary | null>(null);
+  const [loadingPurchasingSummary, setLoadingPurchasingSummary] = useState(true);
+
+  const [pendingPurchases, setPendingPurchases] = useState<PendingPurchase[]>([]);
+  const [loadingPendingPurchases, setLoadingPendingPurchases] = useState(true);
+
+  const [supplierSummary, setSupplierSummary] = useState<SupplierSummary[]>([]);
+  const [loadingSupplierSummary, setLoadingSupplierSummary] = useState(true);
+
+  const [cashierPerformance, setCashierPerformance] = useState<CashierPerformance[]>([]);
+  const [loadingCashierPerformance, setLoadingCashierPerformance] = useState(true);
+
+  const [voidedSales, setVoidedSales] = useState<VoidedSale[]>([]);
+  const [loadingVoidedSales, setLoadingVoidedSales] = useState(true);
+
+  const [adjustmentSummary, setAdjustmentSummary] = useState<StockAdjustmentSummary | null>(null);
+  const [recentAdjustments, setRecentAdjustments] = useState<RecentStockAdjustment[]>([]);
+  const [loadingAdjustments, setLoadingAdjustments] = useState(true);
 
   const loadSummary = useCallback(async (current: DashboardFilters) => {
     try {
@@ -220,6 +252,97 @@ export default function Home() {
     }
   }, []);
 
+  const loadPurchasingSummary = useCallback(async (current: DashboardFilters) => {
+    try {
+      setLoadingPurchasingSummary(true);
+      const response = await api.get<{ data: PurchasingSummary }>(
+        buildDashboardUrl("purchasing-summary", current),
+        { auth: true }
+      );
+      setPurchasingSummary(response.data ?? null);
+    } catch (error: unknown) {
+      toast.error(errorMessage(error, "Failed to load purchasing summary."), { id: "purchasing-summary-error" });
+    } finally {
+      setLoadingPurchasingSummary(false);
+    }
+  }, []);
+
+  const loadPendingPurchases = useCallback(async (current: DashboardFilters) => {
+    try {
+      setLoadingPendingPurchases(true);
+      const response = await api.get<{ data: PendingPurchase[] }>(
+        buildInventoryUrl("pending-purchases", current),
+        { auth: true }
+      );
+      setPendingPurchases(response.data ?? []);
+    } catch (error: unknown) {
+      toast.error(errorMessage(error, "Failed to load pending purchases."), { id: "pending-purchases-error" });
+    } finally {
+      setLoadingPendingPurchases(false);
+    }
+  }, []);
+
+  const loadSupplierSummary = useCallback(async (current: DashboardFilters) => {
+    try {
+      setLoadingSupplierSummary(true);
+      const response = await api.get<{ data: SupplierSummary[] }>(
+        buildDashboardUrl("supplier-summary", current),
+        { auth: true }
+      );
+      setSupplierSummary(response.data ?? []);
+    } catch (error: unknown) {
+      toast.error(errorMessage(error, "Failed to load supplier summary."), { id: "supplier-summary-error" });
+    } finally {
+      setLoadingSupplierSummary(false);
+    }
+  }, []);
+
+  const loadCashierPerformance = useCallback(async (current: DashboardFilters) => {
+    try {
+      setLoadingCashierPerformance(true);
+      const response = await api.get<{ data: CashierPerformance[] }>(
+        buildDashboardUrl("cashier-performance", current),
+        { auth: true }
+      );
+      setCashierPerformance(response.data ?? []);
+    } catch (error: unknown) {
+      toast.error(errorMessage(error, "Failed to load cashier performance."), { id: "cashier-performance-error" });
+    } finally {
+      setLoadingCashierPerformance(false);
+    }
+  }, []);
+
+  const loadVoidedSales = useCallback(async (current: DashboardFilters) => {
+    try {
+      setLoadingVoidedSales(true);
+      const response = await api.get<{ data: VoidedSale[] }>(buildDashboardUrl("voided-sales", current), { auth: true });
+      setVoidedSales(response.data ?? []);
+    } catch (error: unknown) {
+      toast.error(errorMessage(error, "Failed to load voided sales."), { id: "voided-sales-error" });
+    } finally {
+      setLoadingVoidedSales(false);
+    }
+  }, []);
+
+  const loadAdjustments = useCallback(async (current: DashboardFilters) => {
+    try {
+      setLoadingAdjustments(true);
+      const [summaryRes, recentRes] = await Promise.all([
+        api.get<{ data: StockAdjustmentSummary }>(buildDashboardUrl("stock-adjustment-summary", current), { auth: true }),
+        api.get<{ data: RecentStockAdjustment[] }>(
+          buildDashboardUrl("recent-stock-adjustments", current, { Limit: "10" }),
+          { auth: true }
+        ),
+      ]);
+      setAdjustmentSummary(summaryRes.data ?? null);
+      setRecentAdjustments(recentRes.data ?? []);
+    } catch (error: unknown) {
+      toast.error(errorMessage(error, "Failed to load stock adjustments."), { id: "stock-adjustments-error" });
+    } finally {
+      setLoadingAdjustments(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!filters) return;
     void loadSummary(filters);
@@ -248,6 +371,20 @@ export default function Home() {
     if (!filters) return;
     void loadInventoryAlerts(filters, expiringThreshold);
   }, [filters, expiringThreshold, loadInventoryAlerts]);
+
+  useEffect(() => {
+    if (!filters) return;
+    void loadPurchasingSummary(filters);
+    void loadPendingPurchases(filters);
+    void loadSupplierSummary(filters);
+  }, [filters, loadPurchasingSummary, loadPendingPurchases, loadSupplierSummary]);
+
+  useEffect(() => {
+    if (!filters) return;
+    void loadCashierPerformance(filters);
+    void loadVoidedSales(filters);
+    void loadAdjustments(filters);
+  }, [filters, loadCashierPerformance, loadVoidedSales, loadAdjustments]);
 
   return (
     <>
@@ -309,6 +446,30 @@ export default function Home() {
             expiringThreshold={expiringThreshold}
             onExpiringThresholdChange={setExpiringThreshold}
           />
+        </div>
+
+        <div className="col-span-12">
+          <PurchasingKpiCards summary={purchasingSummary} loading={loadingPurchasingSummary} />
+        </div>
+
+        <div className="col-span-12 xl:col-span-7">
+          <PendingPurchasesCard data={pendingPurchases} loading={loadingPendingPurchases} />
+        </div>
+
+        <div className="col-span-12 xl:col-span-5">
+          <SupplierSummaryCard data={supplierSummary} loading={loadingSupplierSummary} />
+        </div>
+
+        <div className="col-span-12 xl:col-span-7">
+          <CashierPerformanceCard data={cashierPerformance} loading={loadingCashierPerformance} />
+        </div>
+
+        <div className="col-span-12 xl:col-span-5">
+          <VoidedSalesCard data={voidedSales} loading={loadingVoidedSales} />
+        </div>
+
+        <div className="col-span-12">
+          <StockAdjustmentCard summary={adjustmentSummary} recent={recentAdjustments} loading={loadingAdjustments} />
         </div>
 
         <div className="col-span-12 xl:col-span-5">

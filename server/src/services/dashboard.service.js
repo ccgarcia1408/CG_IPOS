@@ -302,6 +302,129 @@ const DashboardService = {
             ExpiryDate: row.ExpiryDate,
             DaysRemaining: Number(row.DaysRemaining)
         }));
+    },
+
+    async getPurchasingSummary(query, scope) {
+        const { start, end } = parseDateRange(query.StartDate, query.EndDate);
+        const branchId = resolveBranchId(query.BranchId, scope);
+
+        const row = await DashboardModel.getPurchasingSummary(start, end, branchId);
+
+        return {
+            BranchId: branchId,
+            TotalPurchases: Number(row.TotalPurchases),
+            PurchaseAmount: Number(row.PurchaseAmount),
+            PendingCount: Number(row.PendingCount),
+            PendingAmount: Number(row.PendingAmount),
+            ReceivedCount: Number(row.ReceivedCount),
+            ReceivedAmount: Number(row.ReceivedAmount),
+            CancelledCount: Number(row.CancelledCount),
+            CancelledAmount: Number(row.CancelledAmount)
+        };
+    },
+
+    async getPendingPurchases(query, scope) {
+        const branchId = resolveBranchId(query.BranchId, scope);
+        const rows = await DashboardModel.getPendingPurchases(branchId);
+
+        return rows.map((row) => ({
+            PurchaseId: row.PurchaseId,
+            SupplierName: row.SupplierName,
+            BranchId: row.BranchId,
+            BranchName: row.BranchName,
+            PurchaseDate: row.PurchaseDate,
+            TotalAmount: Number(row.TotalAmount),
+            Status: row.Status
+        }));
+    },
+
+    async getSupplierSummary(query, scope) {
+        const { start, end } = parseDateRange(query.StartDate, query.EndDate);
+        const branchId = resolveBranchId(query.BranchId, scope);
+
+        const rows = await DashboardModel.getSupplierSummary(start, end, branchId);
+
+        return rows.map((row) => ({
+            SupplierId: row.SupplierId,
+            SupplierName: row.SupplierName,
+            PurchaseCount: Number(row.PurchaseCount),
+            TotalAmount: Number(row.TotalAmount)
+        }));
+    },
+
+    async getCashierPerformance(query, scope) {
+        const { start, end } = parseDateRange(query.StartDate, query.EndDate);
+        const branchId = resolveBranchId(query.BranchId, scope);
+
+        const rows = await DashboardModel.getCashierPerformance(start, end, branchId);
+
+        return rows.map((row) => {
+            const sales = Number(row.Sales);
+            const transactions = Number(row.Transactions);
+
+            return {
+                CashierId: row.CashierId,
+                CashierName: row.CashierName,
+                BranchId: row.BranchId,
+                BranchName: row.BranchName,
+                Transactions: transactions,
+                Sales: sales,
+                ItemsSold: Number(row.ItemsSold),
+                AverageTransactionValue: transactions > 0 ? Number((sales / transactions).toFixed(2)) : 0
+            };
+        });
+    },
+
+    async getVoidedSales(query, scope) {
+        const { start, end } = parseDateRange(query.StartDate, query.EndDate);
+        const branchId = resolveBranchId(query.BranchId, scope);
+
+        const rows = await DashboardModel.getVoidedSales(start, end, branchId);
+
+        return rows.map((row) => ({
+            SaleId: row.SaleId,
+            ORNo: row.ORNo,
+            CashierName: row.CashierName,
+            BranchId: row.BranchId,
+            BranchName: row.BranchName,
+            TerminalName: row.TerminalName,
+            Total: Number(row.Total),
+            CancelReason: row.CancelReason,
+            DateCancelled: row.DateCancelled
+        }));
+    },
+
+    async getStockAdjustmentSummary(query, scope) {
+        const { start, end } = parseDateRange(query.StartDate, query.EndDate);
+        const branchId = resolveBranchId(query.BranchId, scope);
+
+        const row = await DashboardModel.getStockAdjustmentSummary(start, end, branchId);
+
+        return {
+            BranchId: branchId,
+            AdjustmentCount: Number(row.AdjustmentCount),
+            StockAdded: Number(row.StockAdded),
+            StockRemoved: Number(row.StockRemoved)
+        };
+    },
+
+    async getRecentStockAdjustments(query, scope) {
+        const { start, end } = parseDateRange(query.StartDate, query.EndDate);
+        const branchId = resolveBranchId(query.BranchId, scope);
+        const limit = Math.min(Number(query.Limit) || DEFAULT_TOP_N, MAX_TOP_N);
+
+        const rows = await DashboardModel.getRecentStockAdjustments(start, end, branchId, limit);
+
+        return rows.map((row) => ({
+            InventoryLogId: row.InventoryLogId,
+            CreatedAt: row.CreatedAt,
+            ProductName: row.ProductName,
+            BranchId: row.BranchId,
+            BranchName: row.BranchName,
+            Quantity: Number(row.Quantity),
+            Reason: row.Reason,
+            UserName: row.UserName
+        }));
     }
 };
 

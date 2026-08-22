@@ -121,3 +121,75 @@ export type ExpiringProduct = {
 };
 
 export type ExpiringThreshold = 7 | 15 | 30;
+
+export type PurchasingSummary = {
+  BranchId: number | null;
+  TotalPurchases: number;
+  PurchaseAmount: number;
+  PendingCount: number;
+  PendingAmount: number;
+  ReceivedCount: number;
+  ReceivedAmount: number;
+  CancelledCount: number;
+  CancelledAmount: number;
+};
+
+export type PurchaseStatus = "pending" | "received" | "cancelled";
+
+export type PendingPurchase = {
+  PurchaseId: number;
+  SupplierName: string;
+  BranchId: number;
+  BranchName: string;
+  PurchaseDate: string;
+  TotalAmount: number;
+  Status: PurchaseStatus;
+};
+
+export type SupplierSummary = {
+  SupplierId: number;
+  SupplierName: string;
+  PurchaseCount: number;
+  TotalAmount: number;
+};
+
+export type CashierPerformance = {
+  CashierId: number;
+  CashierName: string;
+  BranchId: number;
+  BranchName: string;
+  Transactions: number;
+  Sales: number;
+  ItemsSold: number;
+  AverageTransactionValue: number;
+};
+
+export type VoidedSale = {
+  SaleId: number;
+  ORNo: string | null;
+  CashierName: string | null;
+  BranchId: number;
+  BranchName: string;
+  TerminalName: string;
+  Total: number;
+  CancelReason: string | null;
+  DateCancelled: string | null;
+};
+
+export type StockAdjustmentSummary = {
+  BranchId: number | null;
+  AdjustmentCount: number;
+  StockAdded: number;
+  StockRemoved: number;
+};
+
+export type RecentStockAdjustment = {
+  InventoryLogId: number;
+  CreatedAt: string;
+  ProductName: string;
+  BranchId: number;
+  BranchName: string;
+  Quantity: number;
+  Reason: string | null;
+  UserName: string | null;
+};

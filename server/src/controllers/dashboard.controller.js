@@ -68,6 +68,48 @@ const getExpiringProducts = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, "Expiring products fetched successfully", data));
 });
 
+const getPurchasingSummary = asyncHandler(async (req, res) => {
+    const data = await DashboardService.getPurchasingSummary(req.query, req.scope);
+
+    res.status(200).json(new ApiResponse(200, "Purchasing summary fetched successfully", data));
+});
+
+const getPendingPurchases = asyncHandler(async (req, res) => {
+    const data = await DashboardService.getPendingPurchases(req.query, req.scope);
+
+    res.status(200).json(new ApiResponse(200, "Pending purchases fetched successfully", data));
+});
+
+const getSupplierSummary = asyncHandler(async (req, res) => {
+    const data = await DashboardService.getSupplierSummary(req.query, req.scope);
+
+    res.status(200).json(new ApiResponse(200, "Supplier summary fetched successfully", data));
+});
+
+const getCashierPerformance = asyncHandler(async (req, res) => {
+    const data = await DashboardService.getCashierPerformance(req.query, req.scope);
+
+    res.status(200).json(new ApiResponse(200, "Cashier performance fetched successfully", data));
+});
+
+const getVoidedSales = asyncHandler(async (req, res) => {
+    const data = await DashboardService.getVoidedSales(req.query, req.scope);
+
+    res.status(200).json(new ApiResponse(200, "Voided sales fetched successfully", data));
+});
+
+const getStockAdjustmentSummary = asyncHandler(async (req, res) => {
+    const data = await DashboardService.getStockAdjustmentSummary(req.query, req.scope);
+
+    res.status(200).json(new ApiResponse(200, "Stock adjustment summary fetched successfully", data));
+});
+
+const getRecentStockAdjustments = asyncHandler(async (req, res) => {
+    const data = await DashboardService.getRecentStockAdjustments(req.query, req.scope);
+
+    res.status(200).json(new ApiResponse(200, "Recent stock adjustments fetched successfully", data));
+});
+
 module.exports = {
     getSalesSummary,
     getSalesTrend,
@@ -79,5 +121,12 @@ module.exports = {
     getInventorySummary,
     getLowStockAlerts,
     getOutOfStockAlerts,
-    getExpiringProducts
+    getExpiringProducts,
+    getPurchasingSummary,
+    getPendingPurchases,
+    getSupplierSummary,
+    getCashierPerformance,
+    getVoidedSales,
+    getStockAdjustmentSummary,
+    getRecentStockAdjustments
 };

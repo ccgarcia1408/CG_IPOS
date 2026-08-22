@@ -15,5 +15,12 @@ router.get("/inventory-summary", authMiddleware, branchAccessMiddleware, dashboa
 router.get("/low-stock-alerts", authMiddleware, branchAccessMiddleware, dashboardController.getLowStockAlerts);
 router.get("/out-of-stock-alerts", authMiddleware, branchAccessMiddleware, dashboardController.getOutOfStockAlerts);
 router.get("/expiring-products", authMiddleware, branchAccessMiddleware, dashboardController.getExpiringProducts);
+router.get("/purchasing-summary", authMiddleware, branchAccessMiddleware, dashboardController.getPurchasingSummary);
+router.get("/pending-purchases", authMiddleware, branchAccessMiddleware, dashboardController.getPendingPurchases);
+router.get("/supplier-summary", authMiddleware, branchAccessMiddleware, dashboardController.getSupplierSummary);
+router.get("/cashier-performance", authMiddleware, branchAccessMiddleware, dashboardController.getCashierPerformance);
+router.get("/voided-sales", authMiddleware, branchAccessMiddleware, dashboardController.getVoidedSales);
+router.get("/stock-adjustment-summary", authMiddleware, branchAccessMiddleware, dashboardController.getStockAdjustmentSummary);
+router.get("/recent-stock-adjustments", authMiddleware, branchAccessMiddleware, dashboardController.getRecentStockAdjustments);
 
 module.exports = router;
