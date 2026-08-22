@@ -146,12 +146,23 @@ export default function Inventory() {
               onChange={(value) => { setBranchId(value); void load(value); }}
               options={[{ value: "", label: "All branches" }, ...branches.map((branch) => ({ value: String(branch.BranchId), label: branch.Description || branch.Name }))]}
             />
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search products..."
-              className="rounded-lg border px-3 py-2 dark:border-white/10 dark:bg-white/5 dark:text-white"
-            />
+            <div className="relative">
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search products..."
+                className="rounded-lg border px-3 py-2 pr-16 dark:border-white/10 dark:bg-white/5 dark:text-white"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-3 py-1 text-xs font-medium text-red-500 transition hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/5"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
           <button
             onClick={() => setIsReceiveOpen(true)}

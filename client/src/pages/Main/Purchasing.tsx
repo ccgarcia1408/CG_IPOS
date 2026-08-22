@@ -200,12 +200,23 @@ export default function Purchasing() {
       <ComponentCard title="Purchase Orders">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap gap-3">
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search by supplier, branch, or #..."
-              className="rounded-lg border px-3 py-2 dark:border-white/10 dark:bg-white/5 dark:text-white"
-            />
+            <div className="relative">
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search by supplier, branch, or #..."
+                className="rounded-lg border px-3 py-2 pr-16 dark:border-white/10 dark:bg-white/5 dark:text-white"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-3 py-1 text-xs font-medium text-red-500 transition hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/5"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
             <SearchableSelect
               className="w-44"
               placeholder="All statuses"

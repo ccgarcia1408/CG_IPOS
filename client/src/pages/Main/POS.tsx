@@ -16,6 +16,7 @@ import { Product } from "../../types/Product";
 import { Sale } from "../../types/Sale";
 import { ActiveOfficialReceiptAssignment } from "../../types/OfficialReceiptAssignment";
 import { MyCashierShift } from "../../types/CashierShift";
+import ReceiptPrint from "../../components/main/ReceiptPrint";
 
 const getErrorMessage = (error: unknown, fallback: string) => (error instanceof Error ? error.message : fallback);
 const money = (value: number | string) => `₱${Number(value).toFixed(2)}`;
@@ -146,21 +147,60 @@ export default function POS() {
     });
   };
 
-  const handleBarcodeSubmit = () => {
-    const code = barcode.trim();
-    if (!code) return;
+  const handleScannedCode = (code: string) => {
+    const trimmed = code.trim();
+    if (!trimmed) return;
 
-    const product = products.find((p) => p.Barcode === code || p.SKU === code);
+    const product = products.find((p) => p.Barcode === trimmed || p.SKU === trimmed);
     if (!product) {
-      toast.error(`No product found for "${code}".`);
-      setBarcode("");
+      toast.error(`No product found for "${trimmed}".`);
       return;
     }
 
     addToCart(product);
-    setBarcode("");
     toast.success(`${product.Name} added.`, { duration: 1200 });
   };
+
+  const handleBarcodeSubmit = () => {
+    handleScannedCode(barcode);
+    setBarcode("");
+  };
+
+  // Fallback keyboard-wedge capture: if a barcode scanner fires while the
+  // dedicated barcode field isn't focused (e.g. focus landed on a button
+  // after closing a modal or removing a cart line), rapid keystrokes ending
+  // in Enter are still treated as a scan. Only engages when no other input
+  // is focused, so it never intercepts deliberate typing elsewhere.
+  useEffect(() => {
+    const SCAN_KEY_INTERVAL_MS = 60;
+    const SCAN_MIN_LENGTH = 3;
+    let buffer = "";
+    let lastKeyTime = 0;
+
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (receipt || isCloseShiftOpen) return;
+      const active = document.activeElement;
+      const isEditable = active instanceof HTMLElement && ["INPUT", "TEXTAREA", "SELECT"].includes(active.tagName);
+      if (isEditable) { buffer = ""; return; }
+
+      const now = Date.now();
+      if (e.key === "Enter") {
+        if (buffer.length >= SCAN_MIN_LENGTH && now - lastKeyTime <= SCAN_KEY_INTERVAL_MS) {
+          e.preventDefault();
+          handleScannedCode(buffer);
+          barcodeRef.current?.focus();
+        }
+        buffer = "";
+        return;
+      }
+      if (e.key.length !== 1 || e.ctrlKey || e.altKey || e.metaKey) { buffer = ""; return; }
+      buffer = now - lastKeyTime <= SCAN_KEY_INTERVAL_MS ? buffer + e.key : e.key;
+      lastKeyTime = now;
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [receipt, isCloseShiftOpen, products]);
 
   const updateLine = (productId: number, patch: Partial<CartLine>) => {
     setCart((current) => current.map((line) => line.ProductId === productId ? { ...line, ...patch } : line));
@@ -451,7 +491,7 @@ export default function POS() {
         )}
       </Modal>
 
-      <Modal isOpen={!!receipt} title="Sale Completed" onClose={() => setReceipt(null)} confirmText="New Sale" onConfirm={() => setReceipt(null)} hideFooter={false} width="sm">
+      <Modal isOpen={!!receipt} title="Sale Completed" onClose={() => setReceipt(null)} hideFooter width="sm">
         {receipt && (
           <div className="space-y-3 text-sm">
             <div className="text-center">
@@ -468,9 +508,15 @@ export default function POS() {
               <div className="flex justify-between text-gray-600 dark:text-gray-400"><span>Paid</span><span>{money(receipt.AmountPaid)}</span></div>
               <div className="flex justify-between text-gray-600 dark:text-gray-400"><span>Change</span><span>{money(receipt.ChangeAmount)}</span></div>
             </div>
+            <div className="flex gap-3 pt-2">
+              <button type="button" onClick={() => setReceipt(null)} className="flex-1 rounded-lg border px-4 py-2 text-sm font-medium dark:border-white/10 dark:text-gray-300">Skip</button>
+              <button type="button" onClick={() => { window.print(); setReceipt(null); }} className="flex-1 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600">Print Receipt</button>
+            </div>
           </div>
         )}
       </Modal>
+
+      <ReceiptPrint sale={receipt} />
     </>
   );
 }

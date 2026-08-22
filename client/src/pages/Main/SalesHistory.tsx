@@ -8,6 +8,7 @@ import Modal from "../../components/ui/modal/Modal";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../components/ui/table";
 import { api } from "../../services/api";
 import { Sale, SaleItem } from "../../types/Sale";
+import ReceiptPrint from "../../components/main/ReceiptPrint";
 
 const getErrorMessage = (error: unknown, fallback: string) => (error instanceof Error ? error.message : fallback);
 const money = (value: number | string) => `₱${Number(value).toFixed(2)}`;
@@ -26,6 +27,7 @@ export default function SalesHistory() {
   const [returning, setReturning] = useState<SaleItem | null>(null);
   const [returnQty, setReturnQty] = useState("1");
   const [returnReason, setReturnReason] = useState("");
+  const [printingSale, setPrintingSale] = useState<Sale | null>(null);
 
   const load = async () => {
     try {
@@ -66,6 +68,21 @@ export default function SalesHistory() {
     const response = await api.get<{ data: Sale }>(`/api/sales/${viewing.SaleId}`, { auth: true });
     setViewing(response.data);
   };
+
+  const printSale = async (saleId: number) => {
+    try {
+      const response = await api.get<{ data: Sale }>(`/api/sales/${saleId}`, { auth: true });
+      setPrintingSale(response.data);
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to load sale for printing."));
+    }
+  };
+
+  useEffect(() => {
+    if (!printingSale) return;
+    const timer = setTimeout(() => window.print(), 150);
+    return () => clearTimeout(timer);
+  }, [printingSale]);
 
   const confirmVoid = async () => {
     if (!voiding) return;
@@ -112,12 +129,23 @@ export default function SalesHistory() {
       <PageBreadcrumb pageTitle="Sales History" />
       <ComponentCard title="Sales">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by OR#, branch, terminal, or cashier..."
-            className="rounded-lg border px-3 py-2 dark:border-white/10 dark:bg-white/5 dark:text-white"
-          />
+          <div className="relative">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by OR#, branch, terminal, or cashier..."
+              className="rounded-lg border px-3 py-2 pr-16 dark:border-white/10 dark:bg-white/5 dark:text-white"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-3 py-1 text-xs font-medium text-red-500 transition hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/5"
+              >
+                Clear
+              </button>
+            )}
+          </div>
         </div>
 
         {loading ? <p className="text-gray-800 dark:text-white">Loading sales...</p> : (
@@ -143,6 +171,7 @@ export default function SalesHistory() {
                     <TableCell className="px-5 py-4">
                       <div className="flex gap-2">
                         <button onClick={() => openView(sale)} className="rounded-lg bg-gray-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-600">View</button>
+                        <button onClick={() => printSale(sale.SaleId)} className="rounded-lg bg-blue-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-600">Print</button>
                         {!sale.IsCancelled && (
                           <button onClick={() => setVoiding(sale)} className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600">Void</button>
                         )}
@@ -253,6 +282,8 @@ export default function SalesHistory() {
           </div>
         </div>
       </Modal>
+
+      <ReceiptPrint sale={printingSale} />
     </>
   );
 }

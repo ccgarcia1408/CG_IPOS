@@ -790,3 +790,26 @@ span.flatpickr-weekday,
 .simplebar-scrollbar.simplebar-visible:before {
   @apply opacity-100;
 }
+
+#receipt-print-root {
+  display: none;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #receipt-print-root,
+  #receipt-print-root * {
+    visibility: visible;
+  }
+  #receipt-print-root {
+    display: block;
+    position: fixed;
+    inset: 0;
+    width: 80mm;
+    margin: 0 auto;
+    color: #000;
+    background: #fff;
+  }
+}

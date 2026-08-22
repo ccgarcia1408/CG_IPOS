@@ -106,7 +106,14 @@ export default function OfficialReceiptAssignmentForm() {
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]">
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by OR range or cashier..." className="w-full rounded-lg border border-gray-300 py-2 pl-4 pr-4 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white" />
+        <div className="relative">
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by OR range or cashier..." className="w-full rounded-lg border border-gray-300 py-2 pl-4 pr-16 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white" />
+          {search && (
+            <button type="button" onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-3 py-1 text-xs font-medium text-red-500 transition hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/5">
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
       {loading ? <div className="text-gray-800 dark:text-white">Loading assignments...</div> : (
