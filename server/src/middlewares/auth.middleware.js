@@ -21,6 +21,12 @@ const authMiddleware = (req, res, next) => {
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+        // A pending token (issued mid-login, before branch selection) must never work on a
+        // normal protected route -- only POST /api/login/select-branch accepts it.
+        if (decoded.Scope === "PENDING_BRANCH_SELECTION") {
+            return next(new ApiError(401, "Branch selection required"));
+        }
+
         req.user = decoded;
         next();
     } catch (error) {

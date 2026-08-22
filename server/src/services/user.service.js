@@ -106,6 +106,30 @@ const UserService = {
     }
 
     return true;
+  },
+
+  async getUserBranches(userId) {
+    const existingUser = await UserModel.findById(userId);
+    if (!existingUser) {
+      throw new ApiError(404, "User not found");
+    }
+
+    return await UserModel.getBranches(userId);
+  },
+
+  async updateUserBranches(userId, branchIds, updatedBy) {
+    const existingUser = await UserModel.findById(userId);
+    if (!existingUser) {
+      throw new ApiError(404, "User not found");
+    }
+
+    const result = await UserModel.replaceBranches(userId, branchIds, updatedBy);
+
+    if (!result.Success) {
+      throw new ApiError(400, result.Message);
+    }
+
+    return result;
   }
 };
 

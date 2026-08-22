@@ -64,6 +64,20 @@ const UserModel = {
   async delete(userId, deletedBy) {
     const [rows] = await pool.query(`CALL sp_users_delete(?, ?)`, [userId, deletedBy]);
     return rows[0][0];
+  },
+
+  async getBranches(userId) {
+    const [rows] = await pool.query(`CALL sp_user_branches_getByUserId(?)`, [userId]);
+    return rows[0] || [];
+  },
+
+  async replaceBranches(userId, branchIds, updatedBy) {
+    const [rows] = await pool.query(
+      `CALL sp_user_branches_replace(?, ?, ?)`,
+      [userId, JSON.stringify(branchIds), updatedBy]
+    );
+
+    return rows[0][0];
   }
 };
 

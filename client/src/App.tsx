@@ -21,6 +21,7 @@ import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import UserMaintenance from "./pages/References/UserMaintenance";
+import TenantMaintenance from "./pages/References/TenantMaintenance";
 import CategoryMaintenance from "./pages/References/CategoryMaintenance";
 import BranchMaintenance from "./pages/References/BranchMaintenance";
 import PaymentMethodMaintenance from "./pages/References/PaymentMethodMaintenance";
@@ -57,6 +58,7 @@ export default function App() {
 
             {/* Maintenance Page Links*/}
             <Route path="/user-maintenance" element={<UserMaintenance />} />
+            <Route path="/tenant-maintenance" element={<TenantMaintenance />} />
             <Route path="/category-maintenance" element={<CategoryMaintenance />} />
             <Route path="/branch-maintenance" element={<BranchMaintenance />} />
             <Route path="/payment-method-maintenance" element={<PaymentMethodMaintenance />} /> 

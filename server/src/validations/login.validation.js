@@ -5,6 +5,12 @@ const loginSchema = Joi.object({
   Password: Joi.string().trim().min(8).max(255).required()
 });
 
+const selectBranchSchema = Joi.object({
+  TenantId: Joi.number().integer().positive().required(),
+  BranchId: Joi.number().integer().positive().required()
+});
+
 module.exports = {
-  loginSchema
+  loginSchema,
+  selectBranchSchema
 };

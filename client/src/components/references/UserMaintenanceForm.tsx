@@ -9,6 +9,7 @@ import {
 import Badge from "../ui/badge/Badge";
 import Modal from "../ui/modal/Modal";
 import SearchableSelect from "../form/SearchableSelect";
+import MultiSelect from "../form/MultiSelect";
 
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -17,6 +18,10 @@ import { api } from "../../services/api";
 
 import { User } from "../../types/User";
 import { Role } from "../../types/Role";
+import { Tenant } from "../../types/Tenant";
+import { Branch } from "../../types/Branch";
+
+const ADMIN_ROLE_ID = "1";
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (typeof error === "object" && error !== null && "response" in error) {
@@ -37,6 +42,13 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 export default function UserMaintenanceForm() {
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
+
+  // BRANCH ACCESS (edit-only)
+  const [branchFilterTenantId, setBranchFilterTenantId] = useState("");
+  const [selectedBranchIds, setSelectedBranchIds] = useState<string[]>([]);
+  const [loadingUserBranches, setLoadingUserBranches] = useState(false);
 
   // MODAL STATES
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -78,7 +90,38 @@ export default function UserMaintenanceForm() {
       .catch((error: unknown) =>
         toast.error(getErrorMessage(error, "Failed to load roles."))
       );
+
+    api
+      .get<{ data: Tenant[] }>("/api/tenants/active", { auth: true })
+      .then((response) => setTenants(response.data ?? []))
+      .catch((error: unknown) =>
+        toast.error(getErrorMessage(error, "Failed to load tenants."))
+      );
+
+    api
+      .get<{ data: Branch[] }>("/api/branches/active", { auth: true })
+      .then((response) => setBranches(response.data ?? []))
+      .catch((error: unknown) =>
+        toast.error(getErrorMessage(error, "Failed to load branches."))
+      );
   }, []);
+
+  const loadUserBranches = async (userId: number) => {
+    try {
+      setLoadingUserBranches(true);
+
+      const response = await api.get<{ data: { BranchId: number }[] }>(
+        `/api/users/${userId}/branches`,
+        { auth: true }
+      );
+
+      setSelectedBranchIds((response.data ?? []).map((row) => String(row.BranchId)));
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Failed to load branch access."));
+    } finally {
+      setLoadingUserBranches(false);
+    }
+  };
 
   const loadUsers = async () => {
     try {
@@ -116,6 +159,9 @@ export default function UserMaintenanceForm() {
       IsActive: true,
       IsAccountVerified: true,
     });
+
+    setSelectedBranchIds([]);
+    setBranchFilterTenantId("");
   };
 
   const validateForm = () => {
@@ -215,6 +261,14 @@ export default function UserMaintenanceForm() {
           auth: true,
         }
       );
+
+      if (form.RoleId !== ADMIN_ROLE_ID) {
+        await api.put(
+          `/api/users/${editingUser.UserId}/branches`,
+          { BranchIds: selectedBranchIds.map(Number) },
+          { auth: true }
+        );
+      }
 
       toast.success("User updated successfully.");
 
@@ -397,7 +451,7 @@ export default function UserMaintenanceForm() {
                     <TableCell className="px-5 py-4 text-gray-600 dark:text-gray-400">{user.RoleName || <span className="text-red-500">No role</span>}</TableCell>
                     <TableCell className="px-5 py-4"><div className="flex flex-col gap-1"><Badge size="sm" color={isActive ? "success" : "error"}>{isActive ? 'Active' : 'Inactive'}</Badge>{!isVerified && <Badge size="sm" color="warning">Unverified</Badge>}</div></TableCell>
                     <TableCell className="px-5 py-4"><div className="flex items-center justify-center gap-2">
-                      <button onClick={() => { setEditingUser(user); setForm({ FirstName: user.FirstName || '', MiddleName: user.MiddleName || '', LastName: user.LastName || '', Username: user.Username || '', Email: user.Email || '', Age: user.Age?.toString() || '', Address: user.Address || '', ContactNo: user.ContactNo || '', Password: '', RoleId: user.RoleId ? String(user.RoleId) : '', IsActive: Number(user.IsActive) === 1, IsAccountVerified: Number(user.IsAccountVerified) === 1 }); setIsAddOpen(true); }} className="rounded-lg bg-blue-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-600">Edit</button>
+                      <button onClick={() => { setEditingUser(user); setForm({ FirstName: user.FirstName || '', MiddleName: user.MiddleName || '', LastName: user.LastName || '', Username: user.Username || '', Email: user.Email || '', Age: user.Age?.toString() || '', Address: user.Address || '', ContactNo: user.ContactNo || '', Password: '', RoleId: user.RoleId ? String(user.RoleId) : '', IsActive: Number(user.IsActive) === 1, IsAccountVerified: Number(user.IsAccountVerified) === 1 }); setBranchFilterTenantId(""); void loadUserBranches(user.UserId); setIsAddOpen(true); }} className="rounded-lg bg-blue-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-600">Edit</button>
                       <button onClick={() => setDeletingUser(user)} className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600">Delete</button>
                     </div></TableCell>
                   </TableRow>;
@@ -431,6 +485,35 @@ export default function UserMaintenanceForm() {
                 <input type="checkbox" checked={form.IsAccountVerified} onChange={(event) => setForm((current) => ({ ...current, IsAccountVerified: event.target.checked }))} />
                 Verified
               </label>
+            </div>
+          )}
+          {editingUser && form.RoleId !== ADMIN_ROLE_ID && (
+            <div className="md:col-span-2 space-y-3 rounded-lg border border-gray-200 p-4 dark:border-white/10">
+              <h4 className="text-sm font-semibold text-gray-800 dark:text-white">Branch Access</h4>
+              {loadingUserBranches ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400">Loading branch access...</p>
+              ) : (
+                <>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium">Filter by Tenant</label>
+                    <SearchableSelect
+                      placeholder="All tenants"
+                      value={branchFilterTenantId}
+                      onChange={(tenantId) => setBranchFilterTenantId(tenantId)}
+                      options={tenants.map((tenant) => ({ value: String(tenant.TenantId), label: tenant.Name }))}
+                    />
+                  </div>
+                  <MultiSelect
+                    label="Branches"
+                    placeholder="Select branches this user can access"
+                    value={selectedBranchIds}
+                    onChange={setSelectedBranchIds}
+                    options={branches
+                      .filter((branch) => !branchFilterTenantId || String(branch.TenantId) === branchFilterTenantId)
+                      .map((branch) => ({ value: String(branch.BranchId), text: `${branch.Description} (${branch.TenantName})` }))}
+                  />
+                </>
+              )}
             </div>
           )}
         </div>

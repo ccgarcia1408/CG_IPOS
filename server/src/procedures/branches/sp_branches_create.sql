@@ -5,6 +5,7 @@ USE `cg_ipos_db`$$
 DROP PROCEDURE IF EXISTS `sp_branches_create`$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_branches_create`(
+    IN p_TenantId INT,
     IN p_Name VARCHAR(255),
     IN p_Description TEXT,
     IN p_ContactNo VARCHAR(30),
@@ -27,8 +28,20 @@ BEGIN
             NULL AS BranchId;
     END;
 
+    IF NOT EXISTS (
+        SELECT 1
+        FROM tenants
+        WHERE TenantId = p_TenantId
+          AND IsDeleted = 0
+    ) THEN
+
+        SELECT
+            0 AS Success,
+            'Selected tenant is invalid.' AS Message,
+            NULL AS BranchId;
+
     -- Check if branch name already exists
-    IF EXISTS (
+    ELSEIF EXISTS (
         SELECT 1
         FROM branches
         WHERE TRIM(NAME) = TRIM(p_Name)
@@ -45,6 +58,7 @@ BEGIN
         START TRANSACTION;
 
         INSERT INTO branches (
+            TenantId,
             NAME,
             Description,
             ContactNo,
@@ -58,6 +72,7 @@ BEGIN
             IsActive
         )
         VALUES (
+            p_TenantId,
             TRIM(p_Name),
             p_Description,
             p_ContactNo,
@@ -90,6 +105,7 @@ BEGIN
             v_BranchId,
             NULL,
             JSON_OBJECT(
+                'TenantId', p_TenantId,
                 'Name', TRIM(p_Name),
                 'Description', p_Description,
                 'ContactNo', p_ContactNo,

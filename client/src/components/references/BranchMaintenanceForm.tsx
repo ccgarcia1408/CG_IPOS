@@ -12,6 +12,7 @@ import SearchableSelect from "../form/SearchableSelect";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../../services/api";
 import { Branch } from "../../types/Branch";
+import { Tenant } from "../../types/Tenant";
 import { Province } from "../../types/Province";
 import { Municipality } from "../../types/Municipality";
 import { Barangay } from "../../types/Barangay";
@@ -20,6 +21,7 @@ import { toast } from "sonner";
 
 export default function BranchMaintenanceForm() {
   const [branches, setBranches] = useState<Branch[]>([]);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [municipalities, setMunicipalities] = useState<Municipality[]>([]);
   const [barangays, setBarangays] = useState<Barangay[]>([]);
@@ -37,6 +39,7 @@ export default function BranchMaintenanceForm() {
 
   // FORM STATE
   const [form, setForm] = useState({
+    TenantId: "",
     Name: "",
     Description: "",
     ContactNo: "",
@@ -56,8 +59,32 @@ export default function BranchMaintenanceForm() {
 
   useEffect(() => {
     loadBranches();
+    loadTenants();
     loadProvinces();
   }, []);
+
+  // LOAD TENANTS
+  const loadTenants = async () => {
+    try {
+      const response = await api.get<{
+        success: boolean;
+        data: Tenant[];
+      }>("/api/tenants/active", {
+        auth: true,
+      });
+
+      setTenants(response.data ?? []);
+    } catch (err: any) {
+      toast.error(
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to load tenants.",
+        {
+          id: "tenants-error",
+        }
+      );
+    }
+  };
 
   // LOAD MUNICIPALITIES WHEN PROVINCE CHANGES
   useEffect(() => {
@@ -298,6 +325,7 @@ export default function BranchMaintenanceForm() {
   // RESET FORM
   const resetForm = () => {
     setForm({
+      TenantId: "",
       Name: "",
       Description: "",
       ContactNo: "",
@@ -314,6 +342,13 @@ export default function BranchMaintenanceForm() {
 
   // VALIDATE FORM
   const validateForm = () => {
+    if (!form.TenantId) {
+      toast.error("Please select a tenant.", {
+        id: "branch-tenant",
+      });
+      return false;
+    }
+
     if (!form.Name.trim()) {
       toast.error("Branch Code is required.", {
         id: "branch-code",
@@ -554,6 +589,7 @@ export default function BranchMaintenanceForm() {
                 <TableRow>
                   <TableCell isHeader>Branch Code</TableCell>
                   <TableCell isHeader>Branch Name</TableCell>
+                  <TableCell isHeader>Tenant</TableCell>
                   <TableCell isHeader>Contact No.</TableCell>
                   <TableCell isHeader>Address</TableCell>
                   <TableCell isHeader>Status</TableCell>
@@ -585,6 +621,10 @@ export default function BranchMaintenanceForm() {
                       </TableCell>
 
                       <TableCell className="px-5 py-4 text-gray-600 dark:text-gray-400">
+                        {branch.TenantName}
+                      </TableCell>
+
+                      <TableCell className="px-5 py-4 text-gray-600 dark:text-gray-400">
                         {branch.ContactNo}
                       </TableCell>
 
@@ -613,6 +653,7 @@ export default function BranchMaintenanceForm() {
                               setEditingBranch(branch);
 
                               setForm({
+                                TenantId: String(branch.TenantId),
                                 Name: branch.Name,
                                 Description: branch.Description,
                                 ContactNo: branch.ContactNo,
@@ -643,7 +684,7 @@ export default function BranchMaintenanceForm() {
                 ) : (
                   <TableRow>
                     <TableCell
-                      colSpan={6}
+                      colSpan={7}
                       className="py-10 text-center text-gray-500 dark:text-gray-400"
                     >
                       No branches found.
@@ -738,6 +779,25 @@ export default function BranchMaintenanceForm() {
         width="xl"
       >
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+
+            {/* Tenant */}
+            <div className="md:col-span-2">
+                <label className="mb-2 block text-sm font-medium">
+                    Tenant
+                </label>
+
+                <SearchableSelect
+                    placeholder="Select Tenant"
+                    value={form.TenantId}
+                    onChange={(tenantId) =>
+                        setForm({
+                            ...form,
+                            TenantId: tenantId,
+                        })
+                    }
+                    options={tenants.map((tenant) => ({ value: String(tenant.TenantId), label: tenant.Name }))}
+                />
+            </div>
 
             {/* Branch Code */}
             <div>

@@ -27,10 +27,26 @@ const deleteUser = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, "User deleted successfully"));
 });
 
+const getUserBranches = asyncHandler(async (req, res) => {
+  const branches = await UserService.getUserBranches(Number(req.params.id));
+  res.status(200).json(new ApiResponse(200, "User branches retrieved successfully", branches));
+});
+
+const updateUserBranches = asyncHandler(async (req, res) => {
+  const result = await UserService.updateUserBranches(
+    Number(req.params.id),
+    req.body.BranchIds,
+    req.user.UserId
+  );
+  res.status(200).json(new ApiResponse(200, result.Message, null));
+});
+
 module.exports = {
   createUser,
   getUsers,
   getUserById,
   updateUser,
-  deleteUser
+  deleteUser,
+  getUserBranches,
+  updateUserBranches
 };

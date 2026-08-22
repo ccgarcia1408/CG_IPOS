@@ -14,6 +14,7 @@ BEGIN
         u.Username,
         u.Email,
         e.ContactNo,
+        e.ProfilePicture,
         e.FirstName,
         e.MiddleName,
         e.LastName,

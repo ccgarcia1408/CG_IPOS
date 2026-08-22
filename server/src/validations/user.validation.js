@@ -28,7 +28,12 @@ const updateUserSchema = Joi.object({
   IsAccountVerified: Joi.number().integer().valid(0, 1)
 }).min(1);
 
+const updateUserBranchesSchema = Joi.object({
+  BranchIds: Joi.array().items(Joi.number().integer().positive()).min(0).required()
+});
+
 module.exports = {
   createUserSchema,
-  updateUserSchema
+  updateUserSchema,
+  updateUserBranchesSchema
 };

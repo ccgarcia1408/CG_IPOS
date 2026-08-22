@@ -1,5 +1,7 @@
 export interface Branch {
   BranchId: number;
+  TenantId: number;
+  TenantName: string;
   Name: string;
   Description: string;
   ContactNo: string;

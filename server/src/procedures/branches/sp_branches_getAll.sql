@@ -8,6 +8,8 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_branches_getAll`()
 BEGIN
     SELECT
 	b.BranchId,
+	b.TenantId,
+	t.Name AS TenantName,
 	b.Name,
 	b.Description,
 	b.ContactNo,
@@ -27,6 +29,7 @@ BEGIN
 	b.UpdatedBy,
 	b.IsActive
     FROM branches b
+    LEFT JOIN tenants t ON b.TenantId = t.TenantId
     LEFT JOIN provinces p ON b.ProvinceId = p.ProvinceId
     LEFT JOIN municipalities m ON b.MunicipalityId = m.MunicipalityId
     LEFT JOIN barangays br ON b.BarangayId = br.BarangayId
