@@ -14,6 +14,8 @@ import { Terminal } from "../../types/Terminal";
 import { PaymentMethod } from "../../types/PaymentMethod";
 import { Product } from "../../types/Product";
 import { Sale } from "../../types/Sale";
+import { Discount } from "../../types/Discount";
+import { Tax } from "../../types/Tax";
 import { ActiveOfficialReceiptAssignment } from "../../types/OfficialReceiptAssignment";
 import { MyCashierShift } from "../../types/CashierShift";
 import ReceiptPrint from "../../components/main/ReceiptPrint";
@@ -35,6 +37,8 @@ export default function POS() {
   const [terminals, setTerminals] = useState<Terminal[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [discounts, setDiscounts] = useState<Discount[]>([]);
+  const [taxes, setTaxes] = useState<Tax[]>([]);
   const [orAssignment, setOrAssignment] = useState<ActiveOfficialReceiptAssignment | null>(null);
 
   const [branchId, setBranchId] = useState("");
@@ -43,8 +47,8 @@ export default function POS() {
   const [barcode, setBarcode] = useState("");
   const [productPick, setProductPick] = useState("");
   const [cart, setCart] = useState<CartLine[]>([]);
-  const [headerDiscount, setHeaderDiscount] = useState("0");
-  const [tax, setTax] = useState("0");
+  const [discountId, setDiscountId] = useState("");
+  const [taxId, setTaxId] = useState("");
   const [amountPaid, setAmountPaid] = useState("");
   const [saving, setSaving] = useState(false);
   const [receipt, setReceipt] = useState<Sale | null>(null);
@@ -78,6 +82,8 @@ export default function POS() {
     api.get<{ data: Terminal[] }>("/api/terminals/active", { auth: true }).then((r) => setTerminals(r.data ?? [])).catch(() => toast.error("Failed to load terminals."));
     api.get<{ data: PaymentMethod[] }>("/api/payment-methods/active", { auth: true }).then((r) => setPaymentMethods(r.data ?? [])).catch(() => toast.error("Failed to load payment methods."));
     api.get<{ data: Product[] }>("/api/products/active", { auth: true }).then((r) => setProducts(r.data ?? [])).catch(() => toast.error("Failed to load products."));
+    api.get<{ data: Discount[] }>("/api/discounts/active", { auth: true }).then((r) => setDiscounts(r.data ?? [])).catch(() => toast.error("Failed to load discounts."));
+    api.get<{ data: Tax[] }>("/api/taxes/active", { auth: true }).then((r) => setTaxes(r.data ?? [])).catch(() => toast.error("Failed to load taxes."));
     api.get<{ data: ActiveOfficialReceiptAssignment | null }>("/api/or-assignments/me/active", { auth: true })
       .then((r) => setOrAssignment(r.data ?? null))
       .catch(() => toast.error("Failed to load your official receipt assignment."));
@@ -134,7 +140,17 @@ export default function POS() {
   );
 
   const subTotal = useMemo(() => cart.reduce((sum, line) => sum + line.Price * line.Quantity - line.Discount, 0), [cart]);
-  const total = useMemo(() => Math.max(subTotal - (Number(headerDiscount) || 0) + (Number(tax) || 0), 0), [subTotal, headerDiscount, tax]);
+  const selectedDiscount = useMemo(() => discounts.find((d) => String(d.DiscountId) === discountId) ?? null, [discounts, discountId]);
+  const selectedTax = useMemo(() => taxes.find((t) => String(t.TaxId) === taxId) ?? null, [taxes, taxId]);
+  // Preview only — mirrors sp_sales_completeSale's server-side calculation (tax on the
+  // post-discount amount). The authoritative amounts always come back from the SP itself.
+  const discountAmount = useMemo(() => {
+    if (!selectedDiscount) return 0;
+    const raw = selectedDiscount.Type === "PERCENTAGE" ? subTotal * (selectedDiscount.Value / 100) : selectedDiscount.Value;
+    return Math.min(raw, subTotal);
+  }, [selectedDiscount, subTotal]);
+  const taxAmount = useMemo(() => (selectedTax ? (subTotal - discountAmount) * (selectedTax.Rate / 100) : 0), [selectedTax, subTotal, discountAmount]);
+  const total = useMemo(() => Math.max(subTotal - discountAmount + taxAmount, 0), [subTotal, discountAmount, taxAmount]);
   const change = useMemo(() => Math.max((Number(amountPaid) || 0) - total, 0), [amountPaid, total]);
 
   const addToCart = (product: Product, quantity = 1) => {
@@ -212,8 +228,8 @@ export default function POS() {
 
   const resetSale = () => {
     setCart([]);
-    setHeaderDiscount("0");
-    setTax("0");
+    setDiscountId("");
+    setTaxId("");
     setAmountPaid("");
     setProductPick("");
     setBarcode("");
@@ -234,8 +250,8 @@ export default function POS() {
           BranchId: Number(branchId),
           TerminalId: Number(terminalId),
           PaymentMethodId: Number(paymentMethodId),
-          Discount: Number(headerDiscount) || 0,
-          Tax: Number(tax) || 0,
+          DiscountId: discountId ? Number(discountId) : null,
+          TaxId: taxId ? Number(taxId) : null,
           AmountPaid: Number(amountPaid) || 0,
           Items: cart.map((line) => ({ ProductId: line.ProductId, Quantity: line.Quantity, Discount: line.Discount })),
         },
@@ -428,16 +444,28 @@ export default function POS() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-2 block text-sm font-medium">Discount</label>
-                  <input type="number" min={0} step="0.01" value={headerDiscount} onChange={(e) => setHeaderDiscount(e.target.value)} className="w-full rounded-lg border px-4 py-2 dark:border-white/10 dark:bg-white/5 dark:text-white" />
+                  <SearchableSelect
+                    placeholder="None"
+                    value={discountId}
+                    onChange={setDiscountId}
+                    options={discounts.map((d) => ({ value: String(d.DiscountId), label: `${d.Name} (${d.Type === "PERCENTAGE" ? `${d.Value}%` : money(d.Value)})` }))}
+                  />
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-medium">Tax</label>
-                  <input type="number" min={0} step="0.01" value={tax} onChange={(e) => setTax(e.target.value)} className="w-full rounded-lg border px-4 py-2 dark:border-white/10 dark:bg-white/5 dark:text-white" />
+                  <SearchableSelect
+                    placeholder="None"
+                    value={taxId}
+                    onChange={setTaxId}
+                    options={taxes.map((t) => ({ value: String(t.TaxId), label: `${t.Name} (${t.Rate}%)` }))}
+                  />
                 </div>
               </div>
 
               <div className="space-y-1 border-t border-gray-100 pt-3 text-sm dark:border-white/[0.05]">
                 <div className="flex justify-between text-gray-600 dark:text-gray-400"><span>Subtotal</span><span>{money(subTotal)}</span></div>
+                {discountAmount > 0 && <div className="flex justify-between text-gray-600 dark:text-gray-400"><span>Discount</span><span>-{money(discountAmount)}</span></div>}
+                {taxAmount > 0 && <div className="flex justify-between text-gray-600 dark:text-gray-400"><span>Tax</span><span>{money(taxAmount)}</span></div>}
                 <div className="flex justify-between text-lg font-semibold text-gray-800 dark:text-white"><span>Total</span><span>{money(total)}</span></div>
               </div>
 

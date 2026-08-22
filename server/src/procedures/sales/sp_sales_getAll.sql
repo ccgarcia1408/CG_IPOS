@@ -20,7 +20,11 @@ BEGIN
         s.`Date`,
         s.SubTotal,
         s.Discount,
+        s.DiscountId,
+        d.Name AS DiscountName,
         s.Tax,
+        s.TaxId,
+        tx.Name AS TaxName,
         s.Total,
         s.PaymentMethodId,
         pm.Name AS PaymentMethodName,
@@ -36,6 +40,8 @@ BEGIN
     INNER JOIN users u ON u.UserId = s.CashierId
     INNER JOIN employees e ON e.EmployeeId = u.EmployeeId
     LEFT JOIN payment_methods pm ON pm.PaymentMethodId = s.PaymentMethodId
+    LEFT JOIN discounts d ON d.DiscountId = s.DiscountId
+    LEFT JOIN taxes tx ON tx.TaxId = s.TaxId
     WHERE s.IsDeleted = 0
       AND (p_BranchId IS NULL OR s.BranchId = p_BranchId)
       AND (p_TerminalId IS NULL OR s.TerminalId = p_TerminalId)

@@ -30,8 +30,8 @@ export default function ReceiptPrint({ sale }: ReceiptPrintProps) {
         ))}
         <div className="my-2 border-t border-dashed border-black" />
         <div className="flex justify-between"><span>Subtotal</span><span>{money(sale.SubTotal)}</span></div>
-        <div className="flex justify-between"><span>Discount</span><span>{money(sale.Discount)}</span></div>
-        <div className="flex justify-between"><span>Tax</span><span>{money(sale.Tax)}</span></div>
+        <div className="flex justify-between"><span>Discount{sale.DiscountName ? ` (${sale.DiscountName})` : ""}</span><span>{money(sale.Discount)}</span></div>
+        <div className="flex justify-between"><span>Tax{sale.TaxName ? ` (${sale.TaxName})` : ""}</span><span>{money(sale.Tax)}</span></div>
         <div className="flex justify-between font-bold"><span>Total</span><span>{money(sale.Total)}</span></div>
         <div className="flex justify-between"><span>Paid ({sale.PaymentMethodName ?? "-"})</span><span>{money(sale.AmountPaid)}</span></div>
         <div className="flex justify-between"><span>Change</span><span>{money(sale.ChangeAmount)}</span></div>

@@ -21,10 +21,10 @@ const SaleModel = {
         return rows[0] || [];
     },
 
-    async completeSale(branchId, terminalId, cashierId, paymentMethodId, discount, tax, amountPaid, itemsJson, createdBy) {
+    async completeSale(branchId, terminalId, cashierId, paymentMethodId, discountId, taxId, amountPaid, itemsJson, createdBy) {
         const [rows] = await pool.query(
             "CALL sp_sales_completeSale(?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            [branchId, terminalId, cashierId, paymentMethodId, discount, tax, amountPaid, itemsJson, createdBy]
+            [branchId, terminalId, cashierId, paymentMethodId, discountId, taxId, amountPaid, itemsJson, createdBy]
         );
         return rows[0][0];
     },

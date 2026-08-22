@@ -41,7 +41,11 @@ export interface Sale {
   Date: string;
   SubTotal: number;
   Discount: number;
+  DiscountId: number | null;
+  DiscountName: string | null;
   Tax: number;
+  TaxId: number | null;
+  TaxName: string | null;
   Total: number;
   PaymentMethodId: number;
   PaymentMethodName: string | null;

@@ -251,8 +251,8 @@ export default function SalesHistory() {
             )}
             <div className="space-y-1 border-t border-gray-100 pt-3 text-sm dark:border-white/[0.05]">
               <div className="flex justify-between text-gray-600 dark:text-gray-400"><span>Subtotal</span><span>{money(viewing.SubTotal)}</span></div>
-              <div className="flex justify-between text-gray-600 dark:text-gray-400"><span>Discount</span><span>{money(viewing.Discount)}</span></div>
-              <div className="flex justify-between text-gray-600 dark:text-gray-400"><span>Tax</span><span>{money(viewing.Tax)}</span></div>
+              <div className="flex justify-between text-gray-600 dark:text-gray-400"><span>Discount{viewing.DiscountName ? ` (${viewing.DiscountName})` : ""}</span><span>{money(viewing.Discount)}</span></div>
+              <div className="flex justify-between text-gray-600 dark:text-gray-400"><span>Tax{viewing.TaxName ? ` (${viewing.TaxName})` : ""}</span><span>{money(viewing.Tax)}</span></div>
               <div className="flex justify-between font-semibold text-gray-800 dark:text-white"><span>Total</span><span>{money(viewing.Total)}</span></div>
             </div>
           </div>

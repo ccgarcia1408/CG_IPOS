@@ -18,6 +18,11 @@ const nonNegativeNumber = (value, label, fallback = 0) => {
     return number;
 };
 
+const optionalPositiveInteger = (value, label) => {
+    if (value === undefined || value === null || value === "") return null;
+    return positiveInteger(value, label);
+};
+
 const SaleService = {
     async getSales(branchId, terminalId) {
         return SaleModel.getAll(
@@ -44,8 +49,8 @@ const SaleService = {
         const branchId = positiveInteger(data.BranchId, "BranchId");
         const terminalId = positiveInteger(data.TerminalId, "TerminalId");
         const paymentMethodId = positiveInteger(data.PaymentMethodId, "PaymentMethodId");
-        const discount = nonNegativeNumber(data.Discount, "Discount");
-        const tax = nonNegativeNumber(data.Tax, "Tax");
+        const discountId = optionalPositiveInteger(data.DiscountId, "DiscountId");
+        const taxId = optionalPositiveInteger(data.TaxId, "TaxId");
         const amountPaid = nonNegativeNumber(data.AmountPaid, "AmountPaid");
 
         const items = Array.isArray(data.Items) ? data.Items : [];
@@ -58,7 +63,7 @@ const SaleService = {
         }));
 
         const result = await SaleModel.completeSale(
-            branchId, terminalId, cashierId, paymentMethodId, discount, tax, amountPaid,
+            branchId, terminalId, cashierId, paymentMethodId, discountId, taxId, amountPaid,
             JSON.stringify(normalizedItems), createdBy
         );
 

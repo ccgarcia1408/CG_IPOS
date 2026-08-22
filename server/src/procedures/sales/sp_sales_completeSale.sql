@@ -16,13 +16,19 @@ DROP PROCEDURE IF EXISTS `sp_sales_completeSale`$$
 -- reason sp_purchases_receive inlines its stock-increase logic: MySQL/MariaDB has no true
 -- nested transactions, so calling another self-transacting procedure from here would silently
 -- break atomicity.
+--
+-- p_DiscountId/p_TaxId select a header-level discount/tax from the discounts/taxes maintenance
+-- tables (NULL = none applied). The actual currency amounts are computed here from the selected
+-- Type/Value/Rate, never accepted as a raw amount from the client, for the same tamper-proofing
+-- reason SellingPrice is looked up server-side. Tax is calculated on the post-discount amount
+-- (SubTotal - Discount), the standard retail/VAT convention.
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_sales_completeSale`(
     IN p_BranchId INT,
     IN p_TerminalId INT,
     IN p_CashierId INT,
     IN p_PaymentMethodId INT,
-    IN p_Discount DECIMAL(18,2),
-    IN p_Tax DECIMAL(18,2),
+    IN p_DiscountId INT,
+    IN p_TaxId INT,
     IN p_AmountPaid DECIMAL(18,2),
     IN p_Items TEXT,
     IN p_CreatedBy INT
@@ -45,6 +51,12 @@ BEGIN
     DECLARE v_Total DECIMAL(18,2) DEFAULT 0;
     DECLARE v_ChangeAmount DECIMAL(18,2) DEFAULT 0;
 
+    DECLARE v_DiscountType VARCHAR(20);
+    DECLARE v_DiscountValue DECIMAL(10,2);
+    DECLARE v_DiscountAmount DECIMAL(18,2) DEFAULT 0;
+    DECLARE v_TaxRate DECIMAL(5,2);
+    DECLARE v_TaxAmount DECIMAL(18,2) DEFAULT 0;
+
     DECLARE v_ORAssignmentId INT;
     DECLARE v_ORFrom VARCHAR(50);
     DECLARE v_ORTo VARCHAR(50);
@@ -65,10 +77,22 @@ BEGIN
         SELECT 0 AS Success, 'Terminal not found, inactive, or does not belong to this branch.' AS Message, NULL AS SaleId, NULL AS ORNo, NULL AS Total, NULL AS ChangeAmount;
     ELSEIF NOT EXISTS (SELECT 1 FROM payment_methods WHERE PaymentMethodId = p_PaymentMethodId AND IsDeleted = 0 AND IsActive = 1) THEN
         SELECT 0 AS Success, 'Payment method not found or inactive.' AS Message, NULL AS SaleId, NULL AS ORNo, NULL AS Total, NULL AS ChangeAmount;
+    ELSEIF p_DiscountId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM discounts WHERE DiscountId = p_DiscountId AND IsDeleted = 0 AND IsActive = 1) THEN
+        SELECT 0 AS Success, 'Selected discount not found or inactive.' AS Message, NULL AS SaleId, NULL AS ORNo, NULL AS Total, NULL AS ChangeAmount;
+    ELSEIF p_TaxId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM taxes WHERE TaxId = p_TaxId AND IsDeleted = 0 AND IsActive = 1) THEN
+        SELECT 0 AS Success, 'Selected tax not found or inactive.' AS Message, NULL AS SaleId, NULL AS ORNo, NULL AS Total, NULL AS ChangeAmount;
     ELSEIF p_Items IS NULL OR NOT JSON_VALID(p_Items) OR JSON_LENGTH(p_Items) = 0 THEN
         SELECT 0 AS Success, 'At least one line item is required.' AS Message, NULL AS SaleId, NULL AS ORNo, NULL AS Total, NULL AS ChangeAmount;
     ELSE
         SET v_ItemCount = JSON_LENGTH(p_Items);
+
+        IF p_DiscountId IS NOT NULL THEN
+            SELECT `Type`, Value INTO v_DiscountType, v_DiscountValue FROM discounts WHERE DiscountId = p_DiscountId;
+        END IF;
+
+        IF p_TaxId IS NOT NULL THEN
+            SELECT Rate INTO v_TaxRate FROM taxes WHERE TaxId = p_TaxId;
+        END IF;
 
         START TRANSACTION;
 
@@ -101,11 +125,11 @@ BEGIN
 
             -- HEADER (placeholder totals, finalized after the item loop)
             INSERT INTO sales (
-                BranchId, TerminalId, CashierId, `Date`, SubTotal, Discount, Tax, Total,
+                BranchId, TerminalId, CashierId, `Date`, SubTotal, Discount, DiscountId, Tax, TaxId, Total,
                 PaymentMethodId, AmountPaid, ChangeAmount, IsCancelled, IsDeleted, CreatedAt, CreatedBy
             )
             VALUES (
-                p_BranchId, p_TerminalId, p_CashierId, CURDATE(), 0, IFNULL(p_Discount, 0), IFNULL(p_Tax, 0), 0,
+                p_BranchId, p_TerminalId, p_CashierId, CURDATE(), 0, 0, p_DiscountId, 0, p_TaxId, 0,
                 p_PaymentMethodId, p_AmountPaid, 0, 0, 0, NOW(), p_CreatedBy
             );
 
@@ -173,7 +197,18 @@ BEGIN
                 SET i = i + 1;
             END WHILE item_loop;
 
-            SET v_Total = GREATEST(v_SubTotal - IFNULL(p_Discount, 0) + IFNULL(p_Tax, 0), 0);
+            IF p_DiscountId IS NOT NULL THEN
+                SET v_DiscountAmount = LEAST(
+                    IF(v_DiscountType = 'PERCENTAGE', v_SubTotal * v_DiscountValue / 100, v_DiscountValue),
+                    v_SubTotal
+                );
+            END IF;
+
+            IF p_TaxId IS NOT NULL THEN
+                SET v_TaxAmount = (v_SubTotal - v_DiscountAmount) * v_TaxRate / 100;
+            END IF;
+
+            SET v_Total = GREATEST(v_SubTotal - v_DiscountAmount + v_TaxAmount, 0);
 
             IF p_AmountPaid < v_Total THEN
                 SET v_Message = CONCAT('Insufficient payment. Total: ', v_Total, ', paid: ', p_AmountPaid, '.');
@@ -192,7 +227,7 @@ BEGIN
             WHERE ORAssignmentId = v_ORAssignmentId;
 
             UPDATE sales
-            SET SubTotal = v_SubTotal, Total = v_Total, ChangeAmount = v_ChangeAmount,
+            SET SubTotal = v_SubTotal, Discount = v_DiscountAmount, Tax = v_TaxAmount, Total = v_Total, ChangeAmount = v_ChangeAmount,
                 ORId = v_ORId, ORNo = v_NextORNo, UpdatedAt = NOW(), UpdatedBy = p_CreatedBy
             WHERE SaleId = v_SaleId;
 
