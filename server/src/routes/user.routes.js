@@ -14,6 +14,7 @@ router.post("/", validate(createUserSchema), authMiddleware, userController.crea
 router.get("/", authMiddleware, userController.getUsers);
 router.get("/:id", authMiddleware, userController.getUserById);
 router.put("/:id", validate(updateUserSchema), authMiddleware, userController.updateUser);
+router.put("/:id/profile-picture", authMiddleware, userController.updateProfilePicture);
 router.delete("/:id", authMiddleware, userController.deleteUser);
 router.get("/:id/branches", authMiddleware, userController.getUserBranches);
 router.put("/:id/branches", validate(updateUserBranchesSchema), authMiddleware, userController.updateUserBranches);

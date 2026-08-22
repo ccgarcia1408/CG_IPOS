@@ -1,6 +1,10 @@
+const fs = require("fs");
+const path = require("path");
 const UserModel = require("../models/user.model");
+const EmployeeModel = require("../models/employee.model");
 const ApiError = require("../utils/ApiError");
 const bcrypt = require("bcrypt");
+const { PROFILE_PICTURES_DIR } = require("../middlewares/upload.middleware");
 
 // sp_users_create/update/delete raise business errors via SIGNAL SQLSTATE '45000', which
 // mysql2 surfaces as a generic Error (no statusCode). Translate the known messages to the
@@ -115,6 +119,33 @@ const UserService = {
     }
 
     return await UserModel.getBranches(userId);
+  },
+
+  async updateProfilePicture(userId, file, updatedBy) {
+    if (!file) throw new ApiError(400, "A profile picture file is required.");
+
+    const existingUser = await UserModel.findById(userId);
+    if (!existingUser) {
+      fs.unlink(file.path, () => {});
+      throw new ApiError(404, "User not found");
+    }
+
+    const newRelativePath = `/uploads/profile-pictures/${file.filename}`;
+
+    try {
+      const result = await EmployeeModel.updateProfilePictureByUserId(userId, newRelativePath, updatedBy);
+      if (!result.Success) throw new ApiError(400, result.Message);
+    } catch (error) {
+      fs.unlink(file.path, () => {});
+      throw error;
+    }
+
+    // Best-effort cleanup of the old file -- never block the response on this.
+    if (existingUser.ProfilePicture) {
+      fs.unlink(path.join(PROFILE_PICTURES_DIR, path.basename(existingUser.ProfilePicture)), () => {});
+    }
+
+    return await UserModel.findById(userId);
   },
 
   async updateUserBranches(userId, branchIds, updatedBy) {

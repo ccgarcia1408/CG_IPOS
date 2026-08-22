@@ -11,10 +11,10 @@ import Modal from "../ui/modal/Modal";
 import SearchableSelect from "../form/SearchableSelect";
 import MultiSelect from "../form/MultiSelect";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { api } from "../../services/api";
+import { api, API_BASE_URL } from "../../services/api";
 
 import { User } from "../../types/User";
 import { Role } from "../../types/Role";
@@ -57,6 +57,10 @@ export default function UserMaintenanceForm() {
 
   // LOADING
   const [loadingUsers, setLoadingUsers] = useState(true);
+
+  // PROFILE PICTURE (edit-only)
+  const [uploadingPicture, setUploadingPicture] = useState(false);
+  const pictureInputRef = useRef<HTMLInputElement>(null);
 
   // FORM
   const [form, setForm] = useState({
@@ -305,6 +309,26 @@ export default function UserMaintenanceForm() {
     }
   };
 
+  const uploadProfilePicture = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !editingUser) return;
+
+    try {
+      setUploadingPicture(true);
+      const formData = new FormData();
+      formData.append("ProfilePicture", file);
+      const response = await api.put<{ data: User }>(`/api/users/${editingUser.UserId}/profile-picture`, formData, { auth: true });
+      setEditingUser(response.data);
+      toast.success("Profile picture updated successfully.");
+      await loadUsers();
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Failed to upload profile picture."));
+    } finally {
+      setUploadingPicture(false);
+    }
+  };
+
     const activeCount = useMemo(
     () => users.filter((user) => Number(user.IsActive) === 1).length,
     [users]
@@ -469,6 +493,18 @@ export default function UserMaintenanceForm() {
 
       <Modal isOpen={isAddOpen} title={editingUser ? 'Edit User' : 'Add User'} onClose={() => { setIsAddOpen(false); setEditingUser(null); resetForm(); }} onConfirm={editingUser ? handleUpdate : handleSubmit} confirmText={editingUser ? 'Update User' : 'Save User'} width="xl">
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          {editingUser && (
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm font-medium">Profile Picture</label>
+              <div className="flex items-center gap-3">
+                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-white/5">
+                  {editingUser.ProfilePicture && <img src={`${API_BASE_URL}${editingUser.ProfilePicture}`} alt="Profile" className="h-full w-full object-cover" />}
+                </div>
+                <input ref={pictureInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={uploadProfilePicture} />
+                <button type="button" disabled={uploadingPicture} onClick={() => pictureInputRef.current?.click()} className="rounded-lg border px-3 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/10 dark:text-gray-300">{uploadingPicture ? "Uploading..." : "Upload Picture"}</button>
+              </div>
+            </div>
+          )}
           {([['FirstName', 'First Name', 'text'], ['MiddleName', 'Middle Name', 'text'], ['LastName', 'Last Name', 'text'], ['Username', 'Username', 'text'], ['Email', 'Email', 'email'], ['Age', 'Age', 'number'], ['ContactNo', 'Contact Number', 'tel'], ['Password', editingUser ? 'New Password (optional)' : 'Password', 'password']] as const).map(([field, label, type]) => <div key={field}><label className="mb-2 block text-sm font-medium">{label}</label><input type={type} min={field === 'Age' ? 1 : undefined} className="w-full rounded-lg border px-4 py-2 dark:border-white/10 dark:bg-white/5 dark:text-white" value={form[field]} onChange={(event) => setForm((current) => ({ ...current, [field]: event.target.value }))} /></div>)}
           <div>
             <label className="mb-2 block text-sm font-medium">Role</label>

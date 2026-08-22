@@ -24,4 +24,5 @@ export type User = {
     Age: number | null;
     DateHired: string | null;
     IsResigned: number;
+    ProfilePicture: string | null;
 };

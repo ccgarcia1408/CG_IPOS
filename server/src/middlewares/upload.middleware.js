@@ -33,7 +33,26 @@ const uploadProfilePicture = multer({
     limits: { fileSize: MAX_FILE_SIZE_BYTES }
 }).single("ProfilePicture");
 
+const PRODUCT_IMAGES_DIR = path.join(__dirname, "../../uploads/product-images");
+fs.mkdirSync(PRODUCT_IMAGES_DIR, { recursive: true });
+
+const productImageStorage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, PRODUCT_IMAGES_DIR),
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        cb(null, `${crypto.randomUUID()}${ext}`);
+    }
+});
+
+const uploadProductImage = multer({
+    storage: productImageStorage,
+    fileFilter,
+    limits: { fileSize: MAX_FILE_SIZE_BYTES }
+}).single("Image");
+
 module.exports = {
     uploadProfilePicture,
-    PROFILE_PICTURES_DIR
+    PROFILE_PICTURES_DIR,
+    uploadProductImage,
+    PRODUCT_IMAGES_DIR
 };

@@ -1,5 +1,8 @@
+const fs = require("fs");
+const path = require("path");
 const ProductModel = require("../models/products.model");
 const ApiError = require("../utils/ApiError");
+const { PRODUCT_IMAGES_DIR } = require("../middlewares/upload.middleware");
 
 const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
 
@@ -136,6 +139,48 @@ const ProductService = {
 
         if (!result.Success) throw new ApiError(400, result.Message);
         return result;
+    },
+
+    async updateImage(productId, file, userId) {
+        if (!file) throw new ApiError(400, "A product image file is required.");
+        const id = positiveInteger(productId, "ProductId");
+        const existingProduct = await ProductModel.findById(id);
+        if (!existingProduct) {
+            fs.unlink(file.path, () => {});
+            throw new ApiError(404, "Product not found");
+        }
+
+        const newRelativePath = `/uploads/product-images/${file.filename}`;
+
+        try {
+            const result = await ProductModel.update(
+                id,
+                existingProduct.CategoryId,
+                existingProduct.Name,
+                existingProduct.Description,
+                existingProduct.Barcode,
+                existingProduct.SKU,
+                existingProduct.CostPrice,
+                existingProduct.SellingPrice,
+                existingProduct.ManufacturingDate,
+                existingProduct.ExpiryDate,
+                newRelativePath,
+                userId,
+                existingProduct.IsActive
+            );
+            if (!result.Success) throw new ApiError(400, result.Message);
+        } catch (error) {
+            fs.unlink(file.path, () => {});
+            throw error;
+        }
+
+        // Best-effort cleanup of the old file -- never block the response on this. Only
+        // uploaded files live under PRODUCT_IMAGES_DIR; a plain URL in ImagePath is left alone.
+        if (existingProduct.ImagePath && existingProduct.ImagePath.startsWith("/uploads/product-images/")) {
+            fs.unlink(path.join(PRODUCT_IMAGES_DIR, path.basename(existingProduct.ImagePath)), () => {});
+        }
+
+        return await ProductModel.findById(id);
     },
 
     async deleteProduct(productId, userId) {

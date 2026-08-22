@@ -1,6 +1,8 @@
 const ProductService = require("../services/products.service");
 const ApiResponse = require("../utils/ApiResponse");
+const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
+const { uploadProductImage } = require("../middlewares/upload.middleware");
 
 const getProducts = asyncHandler(async (req, res) => {
     const products = await ProductService.getProducts();
@@ -62,6 +64,21 @@ const updateProduct = asyncHandler(async (req, res) => {
     );
 });
 
+const updateProductImage = asyncHandler(async (req, res, next) => {
+    uploadProductImage(req, res, async (err) => {
+        if (err) {
+            return next(err.statusCode ? err : new ApiError(400, err.message));
+        }
+
+        try {
+            const product = await ProductService.updateImage(req.params.productId, req.file, req.user.UserId);
+            res.status(200).json(new ApiResponse(200, "Product image updated successfully", product));
+        } catch (error) {
+            next(error);
+        }
+    });
+});
+
 const deleteProduct = asyncHandler(async (req, res) => {
     const { productId } = req.params;
 
@@ -85,5 +102,6 @@ module.exports = {
     getProductById,
     createProduct,
     updateProduct,
+    updateProductImage,
     deleteProduct
 };

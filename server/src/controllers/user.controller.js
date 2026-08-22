@@ -1,6 +1,8 @@
 const UserService = require("../services/user.service");
 const ApiResponse = require("../utils/ApiResponse");
+const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
+const { uploadProfilePicture } = require("../middlewares/upload.middleware");
 
 const createUser = asyncHandler(async (req, res) => {
   const user = await UserService.createUser(req.body, req.user?.UserId ?? null);
@@ -27,6 +29,21 @@ const deleteUser = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, "User deleted successfully"));
 });
 
+const updateProfilePicture = asyncHandler(async (req, res, next) => {
+  uploadProfilePicture(req, res, async (err) => {
+    if (err) {
+      return next(err.statusCode ? err : new ApiError(400, err.message));
+    }
+
+    try {
+      const user = await UserService.updateProfilePicture(Number(req.params.id), req.file, req.user.UserId);
+      res.status(200).json(new ApiResponse(200, "Profile picture updated successfully", user));
+    } catch (error) {
+      next(error);
+    }
+  });
+});
+
 const getUserBranches = asyncHandler(async (req, res) => {
   const branches = await UserService.getUserBranches(Number(req.params.id));
   res.status(200).json(new ApiResponse(200, "User branches retrieved successfully", branches));
@@ -46,6 +63,7 @@ module.exports = {
   getUsers,
   getUserById,
   updateUser,
+  updateProfilePicture,
   deleteUser,
   getUserBranches,
   updateUserBranches

@@ -7,7 +7,7 @@ import Badge from "../../components/ui/badge/Badge";
 import Modal from "../../components/ui/modal/Modal";
 import SearchableSelect from "../../components/form/SearchableSelect";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../components/ui/table";
-import { api } from "../../services/api";
+import { api, API_BASE_URL } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import { Branch } from "../../types/Branch";
 import { Terminal } from "../../types/Terminal";
@@ -29,6 +29,7 @@ type CartLine = {
   Price: number;
   Quantity: number;
   Discount: number;
+  ImagePath: string | null;
 };
 
 export default function POS() {
@@ -159,7 +160,7 @@ export default function POS() {
       if (existing) {
         return current.map((line) => line.ProductId === product.ProductId ? { ...line, Quantity: line.Quantity + quantity } : line);
       }
-      return [...current, { ProductId: product.ProductId, Name: product.Name, Price: Number(product.SellingPrice), Quantity: quantity, Discount: 0 }];
+      return [...current, { ProductId: product.ProductId, Name: product.Name, Price: Number(product.SellingPrice), Quantity: quantity, Discount: 0, ImagePath: product.ImagePath }];
     });
   };
 
@@ -399,7 +400,14 @@ export default function POS() {
                 <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
                   {cart.length ? cart.map((line) => (
                     <TableRow key={line.ProductId}>
-                      <TableCell className="px-5 py-3 font-medium text-gray-800 dark:text-white">{line.Name}</TableCell>
+                      <TableCell className="px-5 py-3 font-medium text-gray-800 dark:text-white">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-white/5">
+                            {line.ImagePath && <img src={line.ImagePath.startsWith("/uploads/") ? `${API_BASE_URL}${line.ImagePath}` : line.ImagePath} alt={line.Name} className="h-full w-full object-cover" />}
+                          </div>
+                          <span>{line.Name}</span>
+                        </div>
+                      </TableCell>
                       <TableCell className="px-5 py-3 text-gray-600 dark:text-gray-400">{money(line.Price)}</TableCell>
                       <TableCell className="px-5 py-3">
                         <input
