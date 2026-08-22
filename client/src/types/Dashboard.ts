@@ -183,6 +183,59 @@ export type StockAdjustmentSummary = {
   StockRemoved: number;
 };
 
+export type OfficialReceiptSummary = {
+  BranchId: number | null;
+  IssuedCount: number;
+  VoidedCount: number;
+};
+
+export type OrAssignmentStatus = {
+  ORAssignmentId: number;
+  UserId: number;
+  CashierName: string;
+  ORFrom: string;
+  ORTo: string;
+  LastORUsed: string | null;
+  RemainingCount: number;
+};
+
+export type ReturnReason = {
+  Reason: string;
+  ReturnCount: number;
+  RefundAmount: number;
+};
+
+export type TopReturnedProduct = {
+  ProductId: number;
+  ProductName: string;
+  SKU: string;
+  QuantityReturned: number;
+  ReturnValue: number;
+};
+
+export type RecentSale = {
+  SaleId: number;
+  ORNo: string | null;
+  CreatedAt: string;
+  BranchId: number;
+  BranchName: string;
+  TerminalName: string;
+  CashierName: string | null;
+  Total: number;
+  PaymentMethodName: string | null;
+  Status: "Completed" | "Voided";
+};
+
+export type RecentPurchase = {
+  PurchaseId: number;
+  SupplierName: string;
+  BranchId: number;
+  BranchName: string;
+  TotalAmount: number;
+  Status: PurchaseStatus;
+  PurchaseDate: string;
+};
+
 export type RecentStockAdjustment = {
   InventoryLogId: number;
   CreatedAt: string;

@@ -21,6 +21,10 @@ import SupplierSummaryCard from "../../components/dashboard/SupplierSummaryCard"
 import CashierPerformanceCard from "../../components/dashboard/CashierPerformanceCard";
 import VoidedSalesCard from "../../components/dashboard/VoidedSalesCard";
 import StockAdjustmentCard from "../../components/dashboard/StockAdjustmentCard";
+import OfficialReceiptCard from "../../components/dashboard/OfficialReceiptCard";
+import ReturnsDetailCard from "../../components/dashboard/ReturnsDetailCard";
+import RecentSalesCard from "../../components/dashboard/RecentSalesCard";
+import RecentPurchasesCard from "../../components/dashboard/RecentPurchasesCard";
 import { api } from "../../services/api";
 import {
   CashierPerformance,
@@ -28,10 +32,15 @@ import {
   ExpiringThreshold,
   InventorySummary,
   LowStockAlert,
+  OfficialReceiptSummary,
+  OrAssignmentStatus,
   OutOfStockAlert,
   PendingPurchase,
   PurchasingSummary,
+  RecentPurchase,
+  RecentSale,
   RecentStockAdjustment,
+  ReturnReason,
   SalesByBranch,
   SalesByPaymentMethod,
   SalesByTerminal,
@@ -43,6 +52,7 @@ import {
   TopCategory,
   TopProduct,
   TopProductsSortBy,
+  TopReturnedProduct,
   VoidedSale,
 } from "../../types/Dashboard";
 
@@ -122,6 +132,20 @@ export default function Home() {
   const [adjustmentSummary, setAdjustmentSummary] = useState<StockAdjustmentSummary | null>(null);
   const [recentAdjustments, setRecentAdjustments] = useState<RecentStockAdjustment[]>([]);
   const [loadingAdjustments, setLoadingAdjustments] = useState(true);
+
+  const [orSummary, setOrSummary] = useState<OfficialReceiptSummary | null>(null);
+  const [orAssignments, setOrAssignments] = useState<OrAssignmentStatus[]>([]);
+  const [loadingOr, setLoadingOr] = useState(true);
+
+  const [returnReasons, setReturnReasons] = useState<ReturnReason[]>([]);
+  const [topReturned, setTopReturned] = useState<TopReturnedProduct[]>([]);
+  const [loadingReturns, setLoadingReturns] = useState(true);
+
+  const [recentSales, setRecentSales] = useState<RecentSale[]>([]);
+  const [loadingRecentSales, setLoadingRecentSales] = useState(true);
+
+  const [recentPurchases, setRecentPurchases] = useState<RecentPurchase[]>([]);
+  const [loadingRecentPurchases, setLoadingRecentPurchases] = useState(true);
 
   const loadSummary = useCallback(async (current: DashboardFilters) => {
     try {
@@ -343,6 +367,68 @@ export default function Home() {
     }
   }, []);
 
+  const loadOfficialReceipts = useCallback(async (current: DashboardFilters) => {
+    try {
+      setLoadingOr(true);
+      const [summaryRes, assignmentsRes] = await Promise.all([
+        api.get<{ data: OfficialReceiptSummary }>(buildDashboardUrl("official-receipt-summary", current), { auth: true }),
+        api.get<{ data: OrAssignmentStatus[] }>("/api/dashboard/or-assignment-status", { auth: true }),
+      ]);
+      setOrSummary(summaryRes.data ?? null);
+      setOrAssignments(assignmentsRes.data ?? []);
+    } catch (error: unknown) {
+      toast.error(errorMessage(error, "Failed to load official receipt summary."), { id: "or-summary-error" });
+    } finally {
+      setLoadingOr(false);
+    }
+  }, []);
+
+  const loadReturnsDetail = useCallback(async (current: DashboardFilters) => {
+    try {
+      setLoadingReturns(true);
+      const [reasonsRes, topRes] = await Promise.all([
+        api.get<{ data: ReturnReason[] }>(buildDashboardUrl("return-reasons", current), { auth: true }),
+        api.get<{ data: TopReturnedProduct[] }>(buildDashboardUrl("top-returned-products", current, { Limit: "10" }), { auth: true }),
+      ]);
+      setReturnReasons(reasonsRes.data ?? []);
+      setTopReturned(topRes.data ?? []);
+    } catch (error: unknown) {
+      toast.error(errorMessage(error, "Failed to load returns detail."), { id: "returns-detail-error" });
+    } finally {
+      setLoadingReturns(false);
+    }
+  }, []);
+
+  const loadRecentSales = useCallback(async (current: DashboardFilters) => {
+    try {
+      setLoadingRecentSales(true);
+      const response = await api.get<{ data: RecentSale[] }>(
+        buildDashboardUrl("recent-sales", current, { Limit: "10" }),
+        { auth: true }
+      );
+      setRecentSales(response.data ?? []);
+    } catch (error: unknown) {
+      toast.error(errorMessage(error, "Failed to load recent sales."), { id: "recent-sales-error" });
+    } finally {
+      setLoadingRecentSales(false);
+    }
+  }, []);
+
+  const loadRecentPurchases = useCallback(async (current: DashboardFilters) => {
+    try {
+      setLoadingRecentPurchases(true);
+      const response = await api.get<{ data: RecentPurchase[] }>(
+        buildDashboardUrl("recent-purchases", current, { Limit: "10" }),
+        { auth: true }
+      );
+      setRecentPurchases(response.data ?? []);
+    } catch (error: unknown) {
+      toast.error(errorMessage(error, "Failed to load recent purchases."), { id: "recent-purchases-error" });
+    } finally {
+      setLoadingRecentPurchases(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!filters) return;
     void loadSummary(filters);
@@ -385,6 +471,14 @@ export default function Home() {
     void loadVoidedSales(filters);
     void loadAdjustments(filters);
   }, [filters, loadCashierPerformance, loadVoidedSales, loadAdjustments]);
+
+  useEffect(() => {
+    if (!filters) return;
+    void loadOfficialReceipts(filters);
+    void loadReturnsDetail(filters);
+    void loadRecentSales(filters);
+    void loadRecentPurchases(filters);
+  }, [filters, loadOfficialReceipts, loadReturnsDetail, loadRecentSales, loadRecentPurchases]);
 
   return (
     <>
@@ -470,6 +564,22 @@ export default function Home() {
 
         <div className="col-span-12">
           <StockAdjustmentCard summary={adjustmentSummary} recent={recentAdjustments} loading={loadingAdjustments} />
+        </div>
+
+        <div className="col-span-12">
+          <ReturnsDetailCard reasons={returnReasons} topReturned={topReturned} loading={loadingReturns} />
+        </div>
+
+        <div className="col-span-12 xl:col-span-7">
+          <OfficialReceiptCard summary={orSummary} assignments={orAssignments} loading={loadingOr} />
+        </div>
+
+        <div className="col-span-12 xl:col-span-5">
+          <RecentPurchasesCard data={recentPurchases} loading={loadingRecentPurchases} />
+        </div>
+
+        <div className="col-span-12">
+          <RecentSalesCard data={recentSales} loading={loadingRecentSales} />
         </div>
 
         <div className="col-span-12 xl:col-span-5">

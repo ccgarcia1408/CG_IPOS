@@ -22,5 +22,11 @@ router.get("/cashier-performance", authMiddleware, branchAccessMiddleware, dashb
 router.get("/voided-sales", authMiddleware, branchAccessMiddleware, dashboardController.getVoidedSales);
 router.get("/stock-adjustment-summary", authMiddleware, branchAccessMiddleware, dashboardController.getStockAdjustmentSummary);
 router.get("/recent-stock-adjustments", authMiddleware, branchAccessMiddleware, dashboardController.getRecentStockAdjustments);
+router.get("/official-receipt-summary", authMiddleware, branchAccessMiddleware, dashboardController.getOfficialReceiptSummary);
+router.get("/or-assignment-status", authMiddleware, branchAccessMiddleware, dashboardController.getOrAssignmentStatus);
+router.get("/return-reasons", authMiddleware, branchAccessMiddleware, dashboardController.getReturnReasons);
+router.get("/top-returned-products", authMiddleware, branchAccessMiddleware, dashboardController.getTopReturnedProducts);
+router.get("/recent-sales", authMiddleware, branchAccessMiddleware, dashboardController.getRecentSales);
+router.get("/recent-purchases", authMiddleware, branchAccessMiddleware, dashboardController.getRecentPurchases);
 
 module.exports = router;

@@ -149,6 +149,56 @@ const DashboardModel = {
         );
 
         return rows[0] || [];
+    },
+
+    async getOfficialReceiptSummary(startDate, endDate, branchId) {
+        const [rows] = await pool.query(
+            `CALL sp_dashboard_officialReceiptSummary(?, ?, ?)`,
+            [startDate, endDate, branchId]
+        );
+
+        return rows[0][0];
+    },
+
+    async getOrAssignmentStatus() {
+        const [rows] = await pool.query(`CALL sp_dashboard_orAssignmentStatus()`);
+        return rows[0] || [];
+    },
+
+    async getReturnReasons(startDate, endDate, branchId) {
+        const [rows] = await pool.query(
+            `CALL sp_dashboard_returnReasons(?, ?, ?)`,
+            [startDate, endDate, branchId]
+        );
+
+        return rows[0] || [];
+    },
+
+    async getTopReturnedProducts(startDate, endDate, branchId, limit) {
+        const [rows] = await pool.query(
+            `CALL sp_dashboard_topReturnedProducts(?, ?, ?, ?)`,
+            [startDate, endDate, branchId, limit]
+        );
+
+        return rows[0] || [];
+    },
+
+    async getRecentSales(startDate, endDate, branchId, limit) {
+        const [rows] = await pool.query(
+            `CALL sp_dashboard_recentSales(?, ?, ?, ?)`,
+            [startDate, endDate, branchId, limit]
+        );
+
+        return rows[0] || [];
+    },
+
+    async getRecentPurchases(startDate, endDate, branchId, limit) {
+        const [rows] = await pool.query(
+            `CALL sp_dashboard_recentPurchases(?, ?, ?, ?)`,
+            [startDate, endDate, branchId, limit]
+        );
+
+        return rows[0] || [];
     }
 };
 

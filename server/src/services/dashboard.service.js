@@ -425,6 +425,101 @@ const DashboardService = {
             Reason: row.Reason,
             UserName: row.UserName
         }));
+    },
+
+    async getOfficialReceiptSummary(query, scope) {
+        const { start, end } = parseDateRange(query.StartDate, query.EndDate);
+        const branchId = resolveBranchId(query.BranchId, scope);
+
+        const row = await DashboardModel.getOfficialReceiptSummary(start, end, branchId);
+
+        return {
+            BranchId: branchId,
+            IssuedCount: Number(row.IssuedCount),
+            VoidedCount: Number(row.VoidedCount)
+        };
+    },
+
+    async getOrAssignmentStatus() {
+        const rows = await DashboardModel.getOrAssignmentStatus();
+
+        return rows.map((row) => ({
+            ORAssignmentId: row.ORAssignmentId,
+            UserId: row.UserId,
+            CashierName: row.CashierName,
+            ORFrom: row.ORFrom,
+            ORTo: row.ORTo,
+            LastORUsed: row.LastORUsed,
+            RemainingCount: Number(row.RemainingCount)
+        }));
+    },
+
+    async getReturnReasons(query, scope) {
+        const { start, end } = parseDateRange(query.StartDate, query.EndDate);
+        const branchId = resolveBranchId(query.BranchId, scope);
+
+        const rows = await DashboardModel.getReturnReasons(start, end, branchId);
+
+        return rows.map((row) => ({
+            Reason: row.Reason,
+            ReturnCount: Number(row.ReturnCount),
+            RefundAmount: Number(row.RefundAmount)
+        }));
+    },
+
+    async getTopReturnedProducts(query, scope) {
+        const { start, end } = parseDateRange(query.StartDate, query.EndDate);
+        const branchId = resolveBranchId(query.BranchId, scope);
+        const limit = Math.min(Number(query.Limit) || DEFAULT_TOP_N, MAX_TOP_N);
+
+        const rows = await DashboardModel.getTopReturnedProducts(start, end, branchId, limit);
+
+        return rows.map((row) => ({
+            ProductId: row.ProductId,
+            ProductName: row.ProductName,
+            SKU: row.SKU,
+            QuantityReturned: Number(row.QuantityReturned),
+            ReturnValue: Number(row.ReturnValue)
+        }));
+    },
+
+    async getRecentSales(query, scope) {
+        const { start, end } = parseDateRange(query.StartDate, query.EndDate);
+        const branchId = resolveBranchId(query.BranchId, scope);
+        const limit = Math.min(Number(query.Limit) || DEFAULT_TOP_N, MAX_TOP_N);
+
+        const rows = await DashboardModel.getRecentSales(start, end, branchId, limit);
+
+        return rows.map((row) => ({
+            SaleId: row.SaleId,
+            ORNo: row.ORNo,
+            CreatedAt: row.CreatedAt,
+            BranchId: row.BranchId,
+            BranchName: row.BranchName,
+            TerminalName: row.TerminalName,
+            CashierName: row.CashierName,
+            Total: Number(row.Total),
+            PaymentMethodName: row.PaymentMethodName,
+            Status: row.Status
+        }));
+    },
+
+    async getRecentPurchases(query, scope) {
+        const { start, end } = parseDateRange(query.StartDate, query.EndDate);
+        const branchId = resolveBranchId(query.BranchId, scope);
+        const limit = Math.min(Number(query.Limit) || DEFAULT_TOP_N, MAX_TOP_N);
+
+        const rows = await DashboardModel.getRecentPurchases(start, end, branchId, limit);
+
+        return rows.map((row) => ({
+            PurchaseId: row.PurchaseId,
+            SupplierName: row.SupplierName,
+            BranchId: row.BranchId,
+            BranchName: row.BranchName,
+            TotalAmount: Number(row.TotalAmount),
+            Status: row.Status,
+            PurchaseDate: row.PurchaseDate
+        }));
     }
 };
 

@@ -110,6 +110,42 @@ const getRecentStockAdjustments = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, "Recent stock adjustments fetched successfully", data));
 });
 
+const getOfficialReceiptSummary = asyncHandler(async (req, res) => {
+    const data = await DashboardService.getOfficialReceiptSummary(req.query, req.scope);
+
+    res.status(200).json(new ApiResponse(200, "Official receipt summary fetched successfully", data));
+});
+
+const getOrAssignmentStatus = asyncHandler(async (req, res) => {
+    const data = await DashboardService.getOrAssignmentStatus();
+
+    res.status(200).json(new ApiResponse(200, "OR assignment status fetched successfully", data));
+});
+
+const getReturnReasons = asyncHandler(async (req, res) => {
+    const data = await DashboardService.getReturnReasons(req.query, req.scope);
+
+    res.status(200).json(new ApiResponse(200, "Return reasons fetched successfully", data));
+});
+
+const getTopReturnedProducts = asyncHandler(async (req, res) => {
+    const data = await DashboardService.getTopReturnedProducts(req.query, req.scope);
+
+    res.status(200).json(new ApiResponse(200, "Top returned products fetched successfully", data));
+});
+
+const getRecentSales = asyncHandler(async (req, res) => {
+    const data = await DashboardService.getRecentSales(req.query, req.scope);
+
+    res.status(200).json(new ApiResponse(200, "Recent sales fetched successfully", data));
+});
+
+const getRecentPurchases = asyncHandler(async (req, res) => {
+    const data = await DashboardService.getRecentPurchases(req.query, req.scope);
+
+    res.status(200).json(new ApiResponse(200, "Recent purchases fetched successfully", data));
+});
+
 module.exports = {
     getSalesSummary,
     getSalesTrend,
@@ -128,5 +164,11 @@ module.exports = {
     getCashierPerformance,
     getVoidedSales,
     getStockAdjustmentSummary,
-    getRecentStockAdjustments
+    getRecentStockAdjustments,
+    getOfficialReceiptSummary,
+    getOrAssignmentStatus,
+    getReturnReasons,
+    getTopReturnedProducts,
+    getRecentSales,
+    getRecentPurchases
 };
