@@ -29,7 +29,12 @@ import RecentPurchasesCard from "../../components/dashboard/RecentPurchasesCard"
 import RecentActivityCard from "../../components/dashboard/RecentActivityCard";
 import ActiveShiftsCard from "../../components/dashboard/ActiveShiftsCard";
 import ShiftClosingSummaryCard from "../../components/dashboard/ShiftClosingSummaryCard";
+import TerminalStatusCard from "../../components/dashboard/TerminalStatusCard";
+import MyShiftCard from "../../components/dashboard/MyShiftCard";
+import AlertsPanel from "../../components/dashboard/AlertsPanel";
+import QuickActionsCard from "../../components/dashboard/QuickActionsCard";
 import { api } from "../../services/api";
+import { MyCashierShift } from "../../types/CashierShift";
 import {
   ActiveShift,
   CashierPerformance,
@@ -56,6 +61,7 @@ import {
   ShiftClosingSummary,
   StockAdjustmentSummary,
   SupplierSummary,
+  TerminalStatus,
   TopCategory,
   TopProduct,
   TopProductsSortBy,
@@ -64,6 +70,7 @@ import {
 } from "../../types/Dashboard";
 
 const ADMIN_ROLE_ID = 1;
+const CASHIER_ROLE_ID = 4;
 
 const errorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
@@ -91,6 +98,11 @@ function buildInventoryUrl(path: string, filters: DashboardFilters, extra: Recor
 export default function Home() {
   const { user } = useAuth();
   const isAdmin = Number(user?.RoleId) === ADMIN_ROLE_ID;
+  // Manager, Power User, and Inventory all get the broader "manager tier" dashboard, matching
+  // this app's existing precedent of granting those three roles the same back-office access
+  // (see e.g. the purchasing/discounts/inventory-logs menu migrations). Only Cashier gets the
+  // narrow, explicit focus list from the ticket.
+  const isCashier = Number(user?.RoleId) === CASHIER_ROLE_ID;
 
   const [filters, setFilters] = useState<DashboardFilters | null>(null);
   const [granularity, setGranularity] = useState<SalesTrendGranularity>("DAILY");
@@ -167,6 +179,12 @@ export default function Home() {
 
   const [shiftClosingSummary, setShiftClosingSummary] = useState<ShiftClosingSummary[]>([]);
   const [loadingShiftClosingSummary, setLoadingShiftClosingSummary] = useState(true);
+
+  const [terminalStatus, setTerminalStatus] = useState<TerminalStatus[]>([]);
+  const [loadingTerminalStatus, setLoadingTerminalStatus] = useState(true);
+
+  const [myShift, setMyShift] = useState<MyCashierShift | null>(null);
+  const [loadingMyShift, setLoadingMyShift] = useState(true);
 
   const loadSummary = useCallback(async (current: DashboardFilters) => {
     try {
@@ -492,6 +510,30 @@ export default function Home() {
     }
   }, []);
 
+  const loadTerminalStatus = useCallback(async (current: DashboardFilters) => {
+    try {
+      setLoadingTerminalStatus(true);
+      const response = await api.get<{ data: TerminalStatus[] }>(buildInventoryUrl("terminal-status", current), { auth: true });
+      setTerminalStatus(response.data ?? []);
+    } catch (error: unknown) {
+      toast.error(errorMessage(error, "Failed to load terminal status."), { id: "terminal-status-error" });
+    } finally {
+      setLoadingTerminalStatus(false);
+    }
+  }, []);
+
+  const loadMyShift = useCallback(async () => {
+    try {
+      setLoadingMyShift(true);
+      const response = await api.get<{ data: MyCashierShift | null }>("/api/cashier-shifts/mine", { auth: true });
+      setMyShift(response.data ?? null);
+    } catch (error: unknown) {
+      toast.error(errorMessage(error, "Failed to load your shift."), { id: "my-shift-error" });
+    } finally {
+      setLoadingMyShift(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!filters) return;
     void loadSummary(filters);
@@ -554,7 +596,15 @@ export default function Home() {
     if (!filters) return;
     void loadActiveShifts(filters);
     void loadShiftClosingSummary(filters);
-  }, [filters, loadActiveShifts, loadShiftClosingSummary]);
+    void loadTerminalStatus(filters);
+  }, [filters, loadActiveShifts, loadShiftClosingSummary, loadTerminalStatus]);
+
+  useEffect(() => {
+    // Only Cashier has a personal "current shift" concept on this dashboard -- Admin/Manager
+    // don't need this fetched at all.
+    if (!isCashier) return;
+    void loadMyShift();
+  }, [isCashier, loadMyShift]);
 
   return (
     <>
@@ -567,100 +617,141 @@ export default function Home() {
           <DashboardFilterBar onChange={setFilters} />
         </div>
 
-        <div className="col-span-12 space-y-6">
+        <div className="col-span-12">
+          <QuickActionsCard isCashier={isCashier} />
+        </div>
+
+        {!isCashier && (
+          <div className="col-span-12">
+            <AlertsPanel
+              inventorySummary={inventorySummary}
+              purchasingSummary={purchasingSummary}
+              shiftClosingSummary={shiftClosingSummary}
+              loading={loadingInventorySummary || loadingPurchasingSummary || loadingShiftClosingSummary}
+            />
+          </div>
+        )}
+
+        {isCashier && (
+          <div className="col-span-12 xl:col-span-5">
+            <MyShiftCard shift={myShift} loading={loadingMyShift} />
+          </div>
+        )}
+
+        <div className={`col-span-12 space-y-6 ${isCashier ? "xl:col-span-7" : ""}`}>
           <SalesKpiCards summary={summary} loading={loadingSummary} />
 
-          <SalesTrendChart
-            data={trend}
-            loading={loadingTrend}
-            granularity={granularity}
-            onGranularityChange={setGranularity}
-          />
+          {!isCashier && (
+            <SalesTrendChart
+              data={trend}
+              loading={loadingTrend}
+              granularity={granularity}
+              onGranularityChange={setGranularity}
+            />
+          )}
         </div>
 
-        <div className="col-span-12 xl:col-span-7">
-          <TopProductsCard
-            data={topProducts}
-            loading={loadingTopProducts}
-            sortBy={topProductsSortBy}
-            onSortByChange={setTopProductsSortBy}
-          />
-        </div>
+        {!isCashier && (
+          <>
+            <div className="col-span-12 xl:col-span-7">
+              <TopProductsCard
+                data={topProducts}
+                loading={loadingTopProducts}
+                sortBy={topProductsSortBy}
+                onSortByChange={setTopProductsSortBy}
+              />
+            </div>
 
-        <div className="col-span-12 xl:col-span-5">
-          <SalesByPaymentMethodCard data={paymentMethods} loading={loadingPaymentMethods} />
-        </div>
+            <div className="col-span-12 xl:col-span-5">
+              <SalesByPaymentMethodCard data={paymentMethods} loading={loadingPaymentMethods} />
+            </div>
 
-        <div className="col-span-12 xl:col-span-5">
-          <TopCategoriesCard data={topCategories} loading={loadingTopCategories} />
-        </div>
+            <div className="col-span-12 xl:col-span-5">
+              <TopCategoriesCard data={topCategories} loading={loadingTopCategories} />
+            </div>
 
-        <div className="col-span-12 xl:col-span-7">
-          <SalesByBranchCard data={byBranch} loading={loadingByBranch} />
-        </div>
+            <div className="col-span-12 xl:col-span-7">
+              <SalesByBranchCard data={byBranch} loading={loadingByBranch} />
+            </div>
 
-        <div className="col-span-12">
-          <SalesByTerminalCard data={byTerminal} loading={loadingByTerminal} />
-        </div>
+            <div className="col-span-12">
+              <SalesByTerminalCard data={byTerminal} loading={loadingByTerminal} />
+            </div>
 
-        <div className="col-span-12">
-          <ActiveShiftsCard data={activeShifts} loading={loadingActiveShifts} />
+            <div className="col-span-12">
+              <ActiveShiftsCard data={activeShifts} loading={loadingActiveShifts} />
+            </div>
+          </>
+        )}
+
+        {isCashier && (
+          <div className="col-span-12 xl:col-span-7">
+            <SalesByPaymentMethodCard data={paymentMethods} loading={loadingPaymentMethods} />
+          </div>
+        )}
+
+        <div className={`col-span-12 ${isCashier ? "xl:col-span-5" : ""}`}>
+          <TerminalStatusCard data={terminalStatus} loading={loadingTerminalStatus} />
         </div>
 
         <div className="col-span-12">
           <ShiftClosingSummaryCard data={shiftClosingSummary} loading={loadingShiftClosingSummary} />
         </div>
 
-        <div className="col-span-12">
-          <InventoryKpiCards summary={inventorySummary} loading={loadingInventorySummary} />
-        </div>
+        {!isCashier && (
+          <>
+            <div className="col-span-12">
+              <InventoryKpiCards summary={inventorySummary} loading={loadingInventorySummary} />
+            </div>
 
-        <div className="col-span-12">
-          <InventoryAlertsCard
-            lowStock={lowStock}
-            outOfStock={outOfStock}
-            expiring={expiring}
-            loading={loadingInventoryAlerts}
-            expiringThreshold={expiringThreshold}
-            onExpiringThresholdChange={setExpiringThreshold}
-          />
-        </div>
+            <div className="col-span-12">
+              <InventoryAlertsCard
+                lowStock={lowStock}
+                outOfStock={outOfStock}
+                expiring={expiring}
+                loading={loadingInventoryAlerts}
+                expiringThreshold={expiringThreshold}
+                onExpiringThresholdChange={setExpiringThreshold}
+              />
+            </div>
 
-        <div className="col-span-12">
-          <PurchasingKpiCards summary={purchasingSummary} loading={loadingPurchasingSummary} />
-        </div>
+            <div className="col-span-12">
+              <PurchasingKpiCards summary={purchasingSummary} loading={loadingPurchasingSummary} />
+            </div>
 
-        <div className="col-span-12 xl:col-span-7">
-          <PendingPurchasesCard data={pendingPurchases} loading={loadingPendingPurchases} />
-        </div>
+            <div className="col-span-12 xl:col-span-7">
+              <PendingPurchasesCard data={pendingPurchases} loading={loadingPendingPurchases} />
+            </div>
 
-        <div className="col-span-12 xl:col-span-5">
-          <SupplierSummaryCard data={supplierSummary} loading={loadingSupplierSummary} />
-        </div>
+            <div className="col-span-12 xl:col-span-5">
+              <SupplierSummaryCard data={supplierSummary} loading={loadingSupplierSummary} />
+            </div>
 
-        <div className="col-span-12 xl:col-span-7">
-          <CashierPerformanceCard data={cashierPerformance} loading={loadingCashierPerformance} />
-        </div>
+            <div className="col-span-12 xl:col-span-7">
+              <CashierPerformanceCard data={cashierPerformance} loading={loadingCashierPerformance} />
+            </div>
 
-        <div className="col-span-12 xl:col-span-5">
-          <VoidedSalesCard data={voidedSales} loading={loadingVoidedSales} />
-        </div>
+            <div className="col-span-12 xl:col-span-5">
+              <VoidedSalesCard data={voidedSales} loading={loadingVoidedSales} />
+            </div>
 
-        <div className="col-span-12">
-          <StockAdjustmentCard summary={adjustmentSummary} recent={recentAdjustments} loading={loadingAdjustments} />
-        </div>
+            <div className="col-span-12">
+              <StockAdjustmentCard summary={adjustmentSummary} recent={recentAdjustments} loading={loadingAdjustments} />
+            </div>
 
-        <div className="col-span-12">
-          <ReturnsDetailCard reasons={returnReasons} topReturned={topReturned} loading={loadingReturns} />
-        </div>
+            <div className="col-span-12">
+              <ReturnsDetailCard reasons={returnReasons} topReturned={topReturned} loading={loadingReturns} />
+            </div>
 
-        <div className="col-span-12 xl:col-span-7">
-          <OfficialReceiptCard summary={orSummary} assignments={orAssignments} loading={loadingOr} />
-        </div>
+            <div className="col-span-12 xl:col-span-7">
+              <OfficialReceiptCard summary={orSummary} assignments={orAssignments} loading={loadingOr} />
+            </div>
 
-        <div className="col-span-12 xl:col-span-5">
-          <RecentPurchasesCard data={recentPurchases} loading={loadingRecentPurchases} />
-        </div>
+            <div className="col-span-12 xl:col-span-5">
+              <RecentPurchasesCard data={recentPurchases} loading={loadingRecentPurchases} />
+            </div>
+          </>
+        )}
 
         <div className="col-span-12">
           <RecentSalesCard data={recentSales} loading={loadingRecentSales} />
@@ -672,21 +763,25 @@ export default function Home() {
           </div>
         )}
 
-        <div className="col-span-12 xl:col-span-5">
-          <MonthlyTarget />
-        </div>
+        {!isCashier && (
+          <>
+            <div className="col-span-12 xl:col-span-5">
+              <MonthlyTarget />
+            </div>
 
-        <div className="col-span-12">
-          <StatisticsChart />
-        </div>
+            <div className="col-span-12">
+              <StatisticsChart />
+            </div>
 
-        <div className="col-span-12 xl:col-span-5">
-          <DemographicCard />
-        </div>
+            <div className="col-span-12 xl:col-span-5">
+              <DemographicCard />
+            </div>
 
-        <div className="col-span-12 xl:col-span-7">
-          <RecentOrders />
-        </div>
+            <div className="col-span-12 xl:col-span-7">
+              <RecentOrders />
+            </div>
+          </>
+        )}
       </div>
     </>
   );

@@ -585,6 +585,22 @@ const DashboardService = {
             OpenedAt: row.OpenedAt,
             ClosedAt: row.ClosedAt
         }));
+    },
+
+    async getTerminalStatus(query, scope) {
+        const branchId = resolveBranchId(query.BranchId, scope);
+        const rows = await DashboardModel.getTerminalStatus(branchId);
+
+        return rows.map((row) => ({
+            TerminalId: row.TerminalId,
+            TerminalName: row.TerminalName,
+            BranchId: row.BranchId,
+            BranchName: row.BranchName,
+            Status: row.Status,
+            CurrentCashierId: row.CurrentCashierId,
+            CurrentCashierName: row.CurrentCashierName,
+            ShiftOpenedAt: row.ShiftOpenedAt
+        }));
     }
 };
 

@@ -164,6 +164,12 @@ const getShiftClosingSummary = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, "Shift closing summary fetched successfully", data));
 });
 
+const getTerminalStatus = asyncHandler(async (req, res) => {
+    const data = await DashboardService.getTerminalStatus(req.query, req.scope);
+
+    res.status(200).json(new ApiResponse(200, "Terminal status fetched successfully", data));
+});
+
 module.exports = {
     getSalesSummary,
     getSalesTrend,
@@ -191,5 +197,6 @@ module.exports = {
     getRecentPurchases,
     getRecentActivity,
     getActiveShifts,
-    getShiftClosingSummary
+    getShiftClosingSummary,
+    getTerminalStatus
 };

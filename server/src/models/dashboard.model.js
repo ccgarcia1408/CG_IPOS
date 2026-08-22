@@ -222,6 +222,11 @@ const DashboardModel = {
         );
 
         return rows[0] || [];
+    },
+
+    async getTerminalStatus(branchId) {
+        const [rows] = await pool.query(`CALL sp_dashboard_terminalStatus(?)`, [branchId]);
+        return rows[0] || [];
     }
 };
 

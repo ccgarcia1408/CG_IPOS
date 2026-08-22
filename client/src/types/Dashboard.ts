@@ -183,6 +183,17 @@ export type StockAdjustmentSummary = {
   StockRemoved: number;
 };
 
+export type TerminalStatus = {
+  TerminalId: number;
+  TerminalName: string;
+  BranchId: number;
+  BranchName: string;
+  Status: "Open" | "Closed";
+  CurrentCashierId: number | null;
+  CurrentCashierName: string | null;
+  ShiftOpenedAt: string | null;
+};
+
 export type ActiveShift = {
   CashierShiftId: number;
   CashierId: number;

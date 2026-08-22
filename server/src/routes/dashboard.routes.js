@@ -31,5 +31,6 @@ router.get("/recent-purchases", authMiddleware, branchAccessMiddleware, dashboar
 router.get("/recent-activity", authMiddleware, branchAccessMiddleware, dashboardController.getRecentActivity);
 router.get("/active-shifts", authMiddleware, branchAccessMiddleware, dashboardController.getActiveShifts);
 router.get("/shift-closing-summary", authMiddleware, branchAccessMiddleware, dashboardController.getShiftClosingSummary);
+router.get("/terminal-status", authMiddleware, branchAccessMiddleware, dashboardController.getTerminalStatus);
 
 module.exports = router;
