@@ -146,6 +146,12 @@ const getRecentPurchases = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, "Recent purchases fetched successfully", data));
 });
 
+const getRecentActivity = asyncHandler(async (req, res) => {
+    const data = await DashboardService.getRecentActivity(req.query, req.scope);
+
+    res.status(200).json(new ApiResponse(200, "Recent activity fetched successfully", data));
+});
+
 module.exports = {
     getSalesSummary,
     getSalesTrend,
@@ -170,5 +176,6 @@ module.exports = {
     getReturnReasons,
     getTopReturnedProducts,
     getRecentSales,
-    getRecentPurchases
+    getRecentPurchases,
+    getRecentActivity
 };

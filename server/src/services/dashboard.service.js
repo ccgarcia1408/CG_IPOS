@@ -520,6 +520,30 @@ const DashboardService = {
             Status: row.Status,
             PurchaseDate: row.PurchaseDate
         }));
+    },
+
+    async getRecentActivity(query, scope) {
+        // audit_logs has no BranchId -- it spans tenants, users, and every other module, not
+        // just branch-scoped entities. Restricting to Administrator matches the ticket's own
+        // rule that non-admin dashboards must not expose system-wide/administrative activity.
+        if (!scope.isAdmin) {
+            throw new ApiError(403, "Only Administrators can view system activity.");
+        }
+
+        const { start, end } = parseDateRange(query.StartDate, query.EndDate);
+        const limit = Math.min(Number(query.Limit) || DEFAULT_TOP_N, MAX_TOP_N);
+
+        const rows = await DashboardModel.getRecentActivity(start, end, limit);
+
+        return rows.map((row) => ({
+            AuditLogId: row.AuditLogId,
+            CreatedAt: row.CreatedAt,
+            ActionType: row.ActionType,
+            Action: row.Action,
+            TableName: row.TableName,
+            RecordId: row.RecordId,
+            UserName: row.UserName
+        }));
     }
 };
 

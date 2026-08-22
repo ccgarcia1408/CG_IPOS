@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useAuth } from "../../context/AuthContext";
 import StatisticsChart from "../../components/ecommerce/StatisticsChart";
 import MonthlyTarget from "../../components/ecommerce/MonthlyTarget";
 import RecentOrders from "../../components/ecommerce/RecentOrders";
@@ -25,6 +26,7 @@ import OfficialReceiptCard from "../../components/dashboard/OfficialReceiptCard"
 import ReturnsDetailCard from "../../components/dashboard/ReturnsDetailCard";
 import RecentSalesCard from "../../components/dashboard/RecentSalesCard";
 import RecentPurchasesCard from "../../components/dashboard/RecentPurchasesCard";
+import RecentActivityCard from "../../components/dashboard/RecentActivityCard";
 import { api } from "../../services/api";
 import {
   CashierPerformance,
@@ -37,6 +39,7 @@ import {
   OutOfStockAlert,
   PendingPurchase,
   PurchasingSummary,
+  RecentActivity,
   RecentPurchase,
   RecentSale,
   RecentStockAdjustment,
@@ -55,6 +58,8 @@ import {
   TopReturnedProduct,
   VoidedSale,
 } from "../../types/Dashboard";
+
+const ADMIN_ROLE_ID = 1;
 
 const errorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
@@ -80,6 +85,9 @@ function buildInventoryUrl(path: string, filters: DashboardFilters, extra: Recor
 }
 
 export default function Home() {
+  const { user } = useAuth();
+  const isAdmin = Number(user?.RoleId) === ADMIN_ROLE_ID;
+
   const [filters, setFilters] = useState<DashboardFilters | null>(null);
   const [granularity, setGranularity] = useState<SalesTrendGranularity>("DAILY");
   const [topProductsSortBy, setTopProductsSortBy] = useState<TopProductsSortBy>("REVENUE");
@@ -146,6 +154,9 @@ export default function Home() {
 
   const [recentPurchases, setRecentPurchases] = useState<RecentPurchase[]>([]);
   const [loadingRecentPurchases, setLoadingRecentPurchases] = useState(true);
+
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [loadingRecentActivity, setLoadingRecentActivity] = useState(true);
 
   const loadSummary = useCallback(async (current: DashboardFilters) => {
     try {
@@ -429,6 +440,21 @@ export default function Home() {
     }
   }, []);
 
+  const loadRecentActivity = useCallback(async (current: DashboardFilters) => {
+    try {
+      setLoadingRecentActivity(true);
+      const response = await api.get<{ data: RecentActivity[] }>(
+        buildDashboardUrl("recent-activity", current, { Limit: "10" }),
+        { auth: true }
+      );
+      setRecentActivity(response.data ?? []);
+    } catch (error: unknown) {
+      toast.error(errorMessage(error, "Failed to load recent activity."), { id: "recent-activity-error" });
+    } finally {
+      setLoadingRecentActivity(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!filters) return;
     void loadSummary(filters);
@@ -479,6 +505,13 @@ export default function Home() {
     void loadRecentSales(filters);
     void loadRecentPurchases(filters);
   }, [filters, loadOfficialReceipts, loadReturnsDetail, loadRecentSales, loadRecentPurchases]);
+
+  useEffect(() => {
+    // Admin-only endpoint -- audit_logs has no branch scoping, so non-admins would just get a
+    // 403; don't even fetch for them.
+    if (!filters || !isAdmin) return;
+    void loadRecentActivity(filters);
+  }, [filters, isAdmin, loadRecentActivity]);
 
   return (
     <>
@@ -581,6 +614,12 @@ export default function Home() {
         <div className="col-span-12">
           <RecentSalesCard data={recentSales} loading={loadingRecentSales} />
         </div>
+
+        {isAdmin && (
+          <div className="col-span-12">
+            <RecentActivityCard data={recentActivity} loading={loadingRecentActivity} />
+          </div>
+        )}
 
         <div className="col-span-12 xl:col-span-5">
           <MonthlyTarget />

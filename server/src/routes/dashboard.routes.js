@@ -28,5 +28,6 @@ router.get("/return-reasons", authMiddleware, branchAccessMiddleware, dashboardC
 router.get("/top-returned-products", authMiddleware, branchAccessMiddleware, dashboardController.getTopReturnedProducts);
 router.get("/recent-sales", authMiddleware, branchAccessMiddleware, dashboardController.getRecentSales);
 router.get("/recent-purchases", authMiddleware, branchAccessMiddleware, dashboardController.getRecentPurchases);
+router.get("/recent-activity", authMiddleware, branchAccessMiddleware, dashboardController.getRecentActivity);
 
 module.exports = router;

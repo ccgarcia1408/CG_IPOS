@@ -183,6 +183,16 @@ export type StockAdjustmentSummary = {
   StockRemoved: number;
 };
 
+export type RecentActivity = {
+  AuditLogId: number;
+  CreatedAt: string;
+  ActionType: string;
+  Action: string;
+  TableName: string;
+  RecordId: number | null;
+  UserName: string | null;
+};
+
 export type OfficialReceiptSummary = {
   BranchId: number | null;
   IssuedCount: number;

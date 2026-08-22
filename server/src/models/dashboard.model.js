@@ -199,6 +199,15 @@ const DashboardModel = {
         );
 
         return rows[0] || [];
+    },
+
+    async getRecentActivity(startDate, endDate, limit) {
+        const [rows] = await pool.query(
+            `CALL sp_dashboard_recentActivity(?, ?, ?)`,
+            [startDate, endDate, limit]
+        );
+
+        return rows[0] || [];
     }
 };
 
