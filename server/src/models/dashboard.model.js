@@ -208,6 +208,20 @@ const DashboardModel = {
         );
 
         return rows[0] || [];
+    },
+
+    async getActiveShifts(branchId) {
+        const [rows] = await pool.query(`CALL sp_dashboard_activeShifts(?)`, [branchId]);
+        return rows[0] || [];
+    },
+
+    async getShiftClosingSummary(startDate, endDate, branchId) {
+        const [rows] = await pool.query(
+            `CALL sp_dashboard_shiftClosingSummary(?, ?, ?)`,
+            [startDate, endDate, branchId]
+        );
+
+        return rows[0] || [];
     }
 };
 

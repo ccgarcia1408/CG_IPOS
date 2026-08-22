@@ -8,6 +8,7 @@ const meRoutes = require("./me.routes");
 const branchRoutes = require("./branch.routes");
 const tenantRoutes = require("./tenant.routes");
 const dashboardRoutes = require("./dashboard.routes");
+const cashierShiftRoutes = require("./cashierShift.routes");
 const terminalRoutes = require("./terminal.routes");
 const productRoutes = require("./product.routes");
 const provinceRoutes = require("./province.routes");
@@ -37,6 +38,8 @@ router.use("/branches", branchRoutes);
 router.use("/tenants", tenantRoutes);
 
 router.use("/dashboard", dashboardRoutes);
+
+router.use("/cashier-shifts", cashierShiftRoutes);
 
 router.use("/terminals", terminalRoutes);
 

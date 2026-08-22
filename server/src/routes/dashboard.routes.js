@@ -29,5 +29,7 @@ router.get("/top-returned-products", authMiddleware, branchAccessMiddleware, das
 router.get("/recent-sales", authMiddleware, branchAccessMiddleware, dashboardController.getRecentSales);
 router.get("/recent-purchases", authMiddleware, branchAccessMiddleware, dashboardController.getRecentPurchases);
 router.get("/recent-activity", authMiddleware, branchAccessMiddleware, dashboardController.getRecentActivity);
+router.get("/active-shifts", authMiddleware, branchAccessMiddleware, dashboardController.getActiveShifts);
+router.get("/shift-closing-summary", authMiddleware, branchAccessMiddleware, dashboardController.getShiftClosingSummary);
 
 module.exports = router;

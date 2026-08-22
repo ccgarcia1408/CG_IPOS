@@ -183,6 +183,35 @@ export type StockAdjustmentSummary = {
   StockRemoved: number;
 };
 
+export type ActiveShift = {
+  CashierShiftId: number;
+  CashierId: number;
+  CashierName: string;
+  BranchId: number;
+  BranchName: string;
+  TerminalId: number;
+  TerminalName: string;
+  OpeningCash: number;
+  OpenedAt: string;
+  CurrentSales: number;
+  CurrentCashPayments: number;
+};
+
+export type ShiftClosingSummary = {
+  CashierShiftId: number;
+  CashierName: string;
+  TerminalId: number;
+  TerminalName: string;
+  BranchId: number;
+  BranchName: string;
+  OpeningCash: number;
+  ExpectedCash: number;
+  ActualCash: number;
+  Variance: number;
+  OpenedAt: string;
+  ClosedAt: string;
+};
+
 export type RecentActivity = {
   AuditLogId: number;
   CreatedAt: string;

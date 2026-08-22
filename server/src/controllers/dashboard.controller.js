@@ -152,6 +152,18 @@ const getRecentActivity = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, "Recent activity fetched successfully", data));
 });
 
+const getActiveShifts = asyncHandler(async (req, res) => {
+    const data = await DashboardService.getActiveShifts(req.query, req.scope);
+
+    res.status(200).json(new ApiResponse(200, "Active shifts fetched successfully", data));
+});
+
+const getShiftClosingSummary = asyncHandler(async (req, res) => {
+    const data = await DashboardService.getShiftClosingSummary(req.query, req.scope);
+
+    res.status(200).json(new ApiResponse(200, "Shift closing summary fetched successfully", data));
+});
+
 module.exports = {
     getSalesSummary,
     getSalesTrend,
@@ -177,5 +189,7 @@ module.exports = {
     getTopReturnedProducts,
     getRecentSales,
     getRecentPurchases,
-    getRecentActivity
+    getRecentActivity,
+    getActiveShifts,
+    getShiftClosingSummary
 };

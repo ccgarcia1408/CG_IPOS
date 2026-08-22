@@ -544,6 +544,47 @@ const DashboardService = {
             RecordId: row.RecordId,
             UserName: row.UserName
         }));
+    },
+
+    async getActiveShifts(query, scope) {
+        const branchId = resolveBranchId(query.BranchId, scope);
+        const rows = await DashboardModel.getActiveShifts(branchId);
+
+        return rows.map((row) => ({
+            CashierShiftId: row.CashierShiftId,
+            CashierId: row.CashierId,
+            CashierName: row.CashierName,
+            BranchId: row.BranchId,
+            BranchName: row.BranchName,
+            TerminalId: row.TerminalId,
+            TerminalName: row.TerminalName,
+            OpeningCash: Number(row.OpeningCash),
+            OpenedAt: row.OpenedAt,
+            CurrentSales: Number(row.CurrentSales),
+            CurrentCashPayments: Number(row.CurrentCashPayments)
+        }));
+    },
+
+    async getShiftClosingSummary(query, scope) {
+        const { start, end } = parseDateRange(query.StartDate, query.EndDate);
+        const branchId = resolveBranchId(query.BranchId, scope);
+
+        const rows = await DashboardModel.getShiftClosingSummary(start, end, branchId);
+
+        return rows.map((row) => ({
+            CashierShiftId: row.CashierShiftId,
+            CashierName: row.CashierName,
+            TerminalId: row.TerminalId,
+            TerminalName: row.TerminalName,
+            BranchId: row.BranchId,
+            BranchName: row.BranchName,
+            OpeningCash: Number(row.OpeningCash),
+            ExpectedCash: Number(row.ExpectedCash),
+            ActualCash: Number(row.ActualCash),
+            Variance: Number(row.Variance),
+            OpenedAt: row.OpenedAt,
+            ClosedAt: row.ClosedAt
+        }));
     }
 };
 

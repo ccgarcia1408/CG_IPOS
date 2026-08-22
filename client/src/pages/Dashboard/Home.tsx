@@ -27,8 +27,11 @@ import ReturnsDetailCard from "../../components/dashboard/ReturnsDetailCard";
 import RecentSalesCard from "../../components/dashboard/RecentSalesCard";
 import RecentPurchasesCard from "../../components/dashboard/RecentPurchasesCard";
 import RecentActivityCard from "../../components/dashboard/RecentActivityCard";
+import ActiveShiftsCard from "../../components/dashboard/ActiveShiftsCard";
+import ShiftClosingSummaryCard from "../../components/dashboard/ShiftClosingSummaryCard";
 import { api } from "../../services/api";
 import {
+  ActiveShift,
   CashierPerformance,
   ExpiringProduct,
   ExpiringThreshold,
@@ -50,6 +53,7 @@ import {
   SalesSummary,
   SalesTrendGranularity,
   SalesTrendPoint,
+  ShiftClosingSummary,
   StockAdjustmentSummary,
   SupplierSummary,
   TopCategory,
@@ -157,6 +161,12 @@ export default function Home() {
 
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loadingRecentActivity, setLoadingRecentActivity] = useState(true);
+
+  const [activeShifts, setActiveShifts] = useState<ActiveShift[]>([]);
+  const [loadingActiveShifts, setLoadingActiveShifts] = useState(true);
+
+  const [shiftClosingSummary, setShiftClosingSummary] = useState<ShiftClosingSummary[]>([]);
+  const [loadingShiftClosingSummary, setLoadingShiftClosingSummary] = useState(true);
 
   const loadSummary = useCallback(async (current: DashboardFilters) => {
     try {
@@ -455,6 +465,33 @@ export default function Home() {
     }
   }, []);
 
+  const loadActiveShifts = useCallback(async (current: DashboardFilters) => {
+    try {
+      setLoadingActiveShifts(true);
+      const response = await api.get<{ data: ActiveShift[] }>(buildInventoryUrl("active-shifts", current), { auth: true });
+      setActiveShifts(response.data ?? []);
+    } catch (error: unknown) {
+      toast.error(errorMessage(error, "Failed to load active shifts."), { id: "active-shifts-error" });
+    } finally {
+      setLoadingActiveShifts(false);
+    }
+  }, []);
+
+  const loadShiftClosingSummary = useCallback(async (current: DashboardFilters) => {
+    try {
+      setLoadingShiftClosingSummary(true);
+      const response = await api.get<{ data: ShiftClosingSummary[] }>(
+        buildDashboardUrl("shift-closing-summary", current),
+        { auth: true }
+      );
+      setShiftClosingSummary(response.data ?? []);
+    } catch (error: unknown) {
+      toast.error(errorMessage(error, "Failed to load shift closing summary."), { id: "shift-closing-summary-error" });
+    } finally {
+      setLoadingShiftClosingSummary(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!filters) return;
     void loadSummary(filters);
@@ -513,6 +550,12 @@ export default function Home() {
     void loadRecentActivity(filters);
   }, [filters, isAdmin, loadRecentActivity]);
 
+  useEffect(() => {
+    if (!filters) return;
+    void loadActiveShifts(filters);
+    void loadShiftClosingSummary(filters);
+  }, [filters, loadActiveShifts, loadShiftClosingSummary]);
+
   return (
     <>
       <PageMeta
@@ -558,6 +601,14 @@ export default function Home() {
 
         <div className="col-span-12">
           <SalesByTerminalCard data={byTerminal} loading={loadingByTerminal} />
+        </div>
+
+        <div className="col-span-12">
+          <ActiveShiftsCard data={activeShifts} loading={loadingActiveShifts} />
+        </div>
+
+        <div className="col-span-12">
+          <ShiftClosingSummaryCard data={shiftClosingSummary} loading={loadingShiftClosingSummary} />
         </div>
 
         <div className="col-span-12">

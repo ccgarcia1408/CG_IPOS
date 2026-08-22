@@ -15,6 +15,7 @@ import { PaymentMethod } from "../../types/PaymentMethod";
 import { Product } from "../../types/Product";
 import { Sale } from "../../types/Sale";
 import { ActiveOfficialReceiptAssignment } from "../../types/OfficialReceiptAssignment";
+import { MyCashierShift } from "../../types/CashierShift";
 
 const getErrorMessage = (error: unknown, fallback: string) => (error instanceof Error ? error.message : fallback);
 const money = (value: number | string) => `₱${Number(value).toFixed(2)}`;
@@ -47,7 +48,29 @@ export default function POS() {
   const [saving, setSaving] = useState(false);
   const [receipt, setReceipt] = useState<Sale | null>(null);
 
+  const [myShift, setMyShift] = useState<MyCashierShift | null>(null);
+  const [loadingShift, setLoadingShift] = useState(true);
+  const [openingCash, setOpeningCash] = useState("");
+  const [shiftBusy, setShiftBusy] = useState(false);
+  const [isCloseShiftOpen, setIsCloseShiftOpen] = useState(false);
+  const [closingCash, setClosingCash] = useState("");
+
   const barcodeRef = useRef<HTMLInputElement>(null);
+
+  const loadMyShift = () => {
+    setLoadingShift(true);
+    api.get<{ data: MyCashierShift | null }>("/api/cashier-shifts/mine", { auth: true })
+      .then((r) => {
+        const shift = r.data ?? null;
+        setMyShift(shift);
+        if (shift) {
+          setBranchId(String(shift.BranchId));
+          setTerminalId(String(shift.TerminalId));
+        }
+      })
+      .catch(() => toast.error("Failed to load your shift status."))
+      .finally(() => setLoadingShift(false));
+  };
 
   useEffect(() => {
     api.get<{ data: Branch[] }>("/api/branches/active", { auth: true }).then((r) => setBranches(r.data ?? [])).catch(() => toast.error("Failed to load branches."));
@@ -57,7 +80,48 @@ export default function POS() {
     api.get<{ data: ActiveOfficialReceiptAssignment | null }>("/api/or-assignments/me/active", { auth: true })
       .then((r) => setOrAssignment(r.data ?? null))
       .catch(() => toast.error("Failed to load your official receipt assignment."));
+    loadMyShift();
   }, []);
+
+  const handleOpenShift = async () => {
+    if (!branchId || !terminalId) return toast.error("Select a branch and terminal first.");
+    if (openingCash === "" || Number(openingCash) < 0) return toast.error("Enter a valid opening cash amount.");
+
+    try {
+      setShiftBusy(true);
+      await api.post("/api/cashier-shifts", { BranchId: Number(branchId), TerminalId: Number(terminalId), OpeningCash: Number(openingCash) }, { auth: true });
+      toast.success("Shift opened.");
+      setOpeningCash("");
+      loadMyShift();
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to open shift."));
+    } finally {
+      setShiftBusy(false);
+    }
+  };
+
+  const handleCloseShift = async () => {
+    if (!myShift) return;
+    if (closingCash === "" || Number(closingCash) < 0) return toast.error("Enter a valid actual cash amount.");
+
+    try {
+      setShiftBusy(true);
+      const response = await api.put<{ data: { ExpectedCash: number; Variance: number } }>(
+        `/api/cashier-shifts/${myShift.CashierShiftId}/close`,
+        { ClosingCash: Number(closingCash) },
+        { auth: true }
+      );
+      const variance = response.data?.Variance ?? 0;
+      toast.success(`Shift closed. Variance: ${variance >= 0 ? "+" : ""}${money(variance)}`);
+      setClosingCash("");
+      setIsCloseShiftOpen(false);
+      setMyShift(null);
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to close shift."));
+    } finally {
+      setShiftBusy(false);
+    }
+  };
 
   useEffect(() => {
     barcodeRef.current?.focus();
@@ -155,6 +219,52 @@ export default function POS() {
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-5">
+          <ComponentCard title="Shift">
+            {loadingShift ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Loading shift status...</p>
+            ) : myShift ? (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <Badge size="sm" color="success">Shift Open</Badge>
+                  <span className="ml-2">
+                    {myShift.TerminalName} · Opened {new Date(myShift.OpenedAt).toLocaleString()} · Opening Cash {money(myShift.OpeningCash)}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setIsCloseShiftOpen(true)}
+                  className="rounded-lg bg-error-500 px-4 py-2 text-sm font-medium text-white hover:bg-error-600"
+                >
+                  Close Shift
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <div className="flex-1">
+                  <label className="mb-2 block text-sm font-medium">Opening Cash</label>
+                  <input
+                    type="number" min={0} step="0.01"
+                    value={openingCash}
+                    onChange={(e) => setOpeningCash(e.target.value)}
+                    placeholder="e.g. 1000.00"
+                    className="w-full rounded-lg border px-4 py-2 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                  />
+                </div>
+                <button
+                  onClick={handleOpenShift}
+                  disabled={shiftBusy || !branchId || !terminalId}
+                  className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {shiftBusy ? "Opening..." : "Open Shift"}
+                </button>
+              </div>
+            )}
+            {!myShift && !loadingShift && (
+              <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                Select a branch and terminal below, then open your shift. You can still complete sales without an open shift, but they won't count toward any shift's cash reconciliation.
+              </p>
+            )}
+          </ComponentCard>
+
           <ComponentCard title="Branch & Terminal">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div>
@@ -162,6 +272,7 @@ export default function POS() {
                 <SearchableSelect
                   placeholder="Select a branch..."
                   value={branchId}
+                  disabled={!!myShift}
                   onChange={(v) => { setBranchId(v); setTerminalId(""); }}
                   options={branches.map((b) => ({ value: String(b.BranchId), label: b.Description || b.Name }))}
                 />
@@ -171,6 +282,7 @@ export default function POS() {
                 <SearchableSelect
                   placeholder="Select a terminal..."
                   value={terminalId}
+                  disabled={!!myShift}
                   onChange={setTerminalId}
                   options={terminalsForBranch.map((t) => ({ value: String(t.TerminalId), label: t.Name }))}
                 />
@@ -180,6 +292,9 @@ export default function POS() {
                 <input disabled value={user?.Username ?? ""} className="w-full rounded-lg border px-4 py-2 text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-400" />
               </div>
             </div>
+            {myShift && (
+              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">Branch and terminal are locked to your open shift. Close your shift to change them.</p>
+            )}
             {orAssignment ? (
               <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
                 OR range {orAssignment.ORFrom}–{orAssignment.ORTo} · {orAssignment.RemainingCount} remaining
@@ -304,6 +419,37 @@ export default function POS() {
           </ComponentCard>
         </div>
       </div>
+
+      <Modal
+        isOpen={isCloseShiftOpen}
+        title="Close Shift"
+        onClose={() => setIsCloseShiftOpen(false)}
+        onConfirm={handleCloseShift}
+        confirmText={shiftBusy ? "Closing..." : "Close Shift"}
+        width="sm"
+      >
+        {myShift && (
+          <div className="space-y-4 text-sm">
+            <div className="flex justify-between text-gray-600 dark:text-gray-400">
+              <span>Opening Cash</span>
+              <span className="font-medium text-gray-800 dark:text-white">{money(myShift.OpeningCash)}</span>
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium">Actual Cash Counted</label>
+              <input
+                type="number" min={0} step="0.01"
+                value={closingCash}
+                onChange={(e) => setClosingCash(e.target.value)}
+                placeholder="Count the drawer and enter the total"
+                className="w-full rounded-lg border px-4 py-2 text-lg dark:border-white/10 dark:bg-white/5 dark:text-white"
+              />
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Expected cash and variance are calculated automatically once you close the shift.
+            </p>
+          </div>
+        )}
+      </Modal>
 
       <Modal isOpen={!!receipt} title="Sale Completed" onClose={() => setReceipt(null)} confirmText="New Sale" onConfirm={() => setReceipt(null)} hideFooter={false} width="sm">
         {receipt && (
