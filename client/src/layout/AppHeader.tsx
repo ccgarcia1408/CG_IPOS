@@ -1,14 +1,42 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Link } from "react-router";
+import { toast } from "sonner";
 import { useSidebar } from "../context/SidebarContext";
+import { useAuth } from "../context/AuthContext";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 import UserDropdown from "../components/header/UserDropdown";
+import { api } from "../services/api";
+import { decodeJwtPayload } from "../utils/jwt";
+import { Branch } from "../types/Branch";
+
+const ADMIN_ROLE_ID = 1;
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
 
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
+
+  const { user, token } = useAuth();
+  const isAdmin = Number(user?.RoleId) === ADMIN_ROLE_ID;
+  const sessionBranchId = useMemo(() => {
+    if (isAdmin || !token) return null;
+    const payload = decodeJwtPayload<{ BranchId?: number }>(token);
+    return payload?.BranchId ?? null;
+  }, [isAdmin, token]);
+
+  const [branches, setBranches] = useState<Branch[]>([]);
+  useEffect(() => {
+    if (isAdmin || !sessionBranchId) return;
+    api
+      .get<{ data: Branch[] }>("/api/branches/active", { auth: true })
+      .then((response) => setBranches(response.data ?? []))
+      .catch(() => toast.error("Failed to load branch."));
+  }, [isAdmin, sessionBranchId]);
+
+  const branchLabel = isAdmin
+    ? "All Branches"
+    : branches.find((b) => b.BranchId === sessionBranchId)?.Description ?? null;
 
   const handleToggle = () => {
     if (window.innerWidth >= 1024) {
@@ -156,6 +184,11 @@ const AppHeader: React.FC = () => {
           } items-center justify-between w-full gap-4 px-5 py-4 lg:flex shadow-theme-md lg:justify-end lg:px-0 lg:shadow-none`}
         >
           <div className="flex items-center gap-2 2xsm:gap-3">
+            {branchLabel && (
+              <span className="hidden items-center rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-600 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-300 sm:inline-flex">
+                {branchLabel}
+              </span>
+            )}
             {/* <!-- Dark Mode Toggler --> */}
             <ThemeToggleButton />
             {/* <!-- Dark Mode Toggler --> */}
