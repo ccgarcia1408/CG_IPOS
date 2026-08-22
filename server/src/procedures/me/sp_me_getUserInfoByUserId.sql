@@ -13,6 +13,7 @@ BEGIN
 	employees.`Address`,
 	employees.`Age`,
 	employees.`ContactNo`,
+	employees.`ProfilePicture`,
 	employees.`DateHired`,
 	employees.`IsResigned`,
 	users.`UserId`,

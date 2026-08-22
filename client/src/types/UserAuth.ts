@@ -21,6 +21,7 @@ export type UserAuth = {
     Address: string | null;
     Age: number | null;
     ContactNo: string | null;
+    ProfilePicture: string | null;
     DateHired: string | null;
     IsResigned: boolean;
     [key: string]: unknown;

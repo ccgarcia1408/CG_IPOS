@@ -1,6 +1,5 @@
 export interface Product {
   ProductId: number;
-  BranchId: number;
   CategoryId: number;
   Name: string;
   Description: string | null;
@@ -8,8 +7,6 @@ export interface Product {
   SKU: string | null;
   CostPrice: number;
   SellingPrice: number;
-  Stock: number;
-  MinimumStock: number;
   ImagePath: string | null;
   ManufacturingDate: string | null;
   ExpiryDate: string | null;

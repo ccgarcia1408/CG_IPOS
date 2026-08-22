@@ -1,7 +1,17 @@
+const fs = require("fs");
+const path = require("path");
 const ProductModel = require("../models/products.model");
 const ApiError = require("../utils/ApiError");
+const { PRODUCT_IMAGES_DIR } = require("../middlewares/upload.middleware");
 
 const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
+
+const rejectInventoryFields = (data) => {
+    const forbidden = ["BranchId", "Stock", "MinimumStock"].filter((field) => hasOwn(data, field));
+    if (forbidden.length) {
+        throw new ApiError(400, `${forbidden.join(", ")} belongs to inventory and cannot be changed through Products.`);
+    }
+};
 
 const positiveInteger = (value, label) => {
     const number = Number(value);
@@ -65,7 +75,7 @@ const ProductService = {
     },
 
     async createProduct(data, userId) {
-        const branchId = positiveInteger(data.BranchId, "BranchId");
+        rejectInventoryFields(data);
         const categoryId = positiveInteger(data.CategoryId, "CategoryId");
         const name = nullableText(data.Name);
         if (!name) throw new ApiError(400, "Product name is required.");
@@ -75,7 +85,6 @@ const ProductService = {
         validateDates(manufacturingDate, expiryDate);
 
         const result = await ProductModel.create(
-            branchId,
             categoryId,
             name,
             nullableText(data.Description),
@@ -83,8 +92,6 @@ const ProductService = {
             sku,
             nonNegativeNumber(data.CostPrice, "CostPrice"),
             nonNegativeNumber(data.SellingPrice, "SellingPrice"),
-            nonNegativeNumber(data.Stock, "Stock", true),
-            nonNegativeNumber(data.MinimumStock, "MinimumStock", true),
             manufacturingDate,
             expiryDate,
             nullableText(data.ImagePath),
@@ -96,11 +103,11 @@ const ProductService = {
     },
 
     async updateProduct(productId, data, userId) {
+        rejectInventoryFields(data);
         const id = positiveInteger(productId, "ProductId");
         const existingProduct = await ProductModel.findById(id);
         if (!existingProduct) throw new ApiError(404, "Product not found");
 
-        const branchId = hasOwn(data, "BranchId") ? positiveInteger(data.BranchId, "BranchId") : existingProduct.BranchId;
         const categoryId = hasOwn(data, "CategoryId") ? positiveInteger(data.CategoryId, "CategoryId") : existingProduct.CategoryId;
         const name = hasOwn(data, "Name") ? nullableText(data.Name) : existingProduct.Name;
         if (!name) throw new ApiError(400, "Product name is required.");
@@ -116,7 +123,6 @@ const ProductService = {
 
         const result = await ProductModel.update(
             id,
-            branchId,
             categoryId,
             name,
             hasOwn(data, "Description") ? nullableText(data.Description) : existingProduct.Description,
@@ -124,8 +130,6 @@ const ProductService = {
             sku,
             hasOwn(data, "CostPrice") ? nonNegativeNumber(data.CostPrice, "CostPrice") : existingProduct.CostPrice,
             hasOwn(data, "SellingPrice") ? nonNegativeNumber(data.SellingPrice, "SellingPrice") : existingProduct.SellingPrice,
-            hasOwn(data, "Stock") ? nonNegativeNumber(data.Stock, "Stock", true) : existingProduct.Stock,
-            hasOwn(data, "MinimumStock") ? nonNegativeNumber(data.MinimumStock, "MinimumStock", true) : existingProduct.MinimumStock,
             manufacturingDate,
             expiryDate,
             hasOwn(data, "ImagePath") ? nullableText(data.ImagePath) : existingProduct.ImagePath,
@@ -135,6 +139,48 @@ const ProductService = {
 
         if (!result.Success) throw new ApiError(400, result.Message);
         return result;
+    },
+
+    async updateImage(productId, file, userId) {
+        if (!file) throw new ApiError(400, "A product image file is required.");
+        const id = positiveInteger(productId, "ProductId");
+        const existingProduct = await ProductModel.findById(id);
+        if (!existingProduct) {
+            fs.unlink(file.path, () => {});
+            throw new ApiError(404, "Product not found");
+        }
+
+        const newRelativePath = `/uploads/product-images/${file.filename}`;
+
+        try {
+            const result = await ProductModel.update(
+                id,
+                existingProduct.CategoryId,
+                existingProduct.Name,
+                existingProduct.Description,
+                existingProduct.Barcode,
+                existingProduct.SKU,
+                existingProduct.CostPrice,
+                existingProduct.SellingPrice,
+                existingProduct.ManufacturingDate,
+                existingProduct.ExpiryDate,
+                newRelativePath,
+                userId,
+                existingProduct.IsActive
+            );
+            if (!result.Success) throw new ApiError(400, result.Message);
+        } catch (error) {
+            fs.unlink(file.path, () => {});
+            throw error;
+        }
+
+        // Best-effort cleanup of the old file -- never block the response on this. Only
+        // uploaded files live under PRODUCT_IMAGES_DIR; a plain URL in ImagePath is left alone.
+        if (existingProduct.ImagePath && existingProduct.ImagePath.startsWith("/uploads/product-images/")) {
+            fs.unlink(path.join(PRODUCT_IMAGES_DIR, path.basename(existingProduct.ImagePath)), () => {});
+        }
+
+        return await ProductModel.findById(id);
     },
 
     async deleteProduct(productId, userId) {

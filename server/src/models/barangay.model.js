@@ -19,47 +19,34 @@ const BarangayModel = {
     async findByMunicipalityId(municipalityId) {
         const [rows] = await pool.query(`CALL sp_barangays_getByMunicipalityId(?)`, [municipalityId]);
         return rows[0] || [];
-    }
+    },
 
-    // async create(name, description, contactNo, provinceId, municipalityId, barangayId, createdBy) {
-    //     const [rows] = await pool.query(
-    //         `CALL sp_barangays_create(?, ?, ?, ?, ?, ?, ?)`,
-    //         [name, description, contactNo, provinceId, municipalityId, barangayId, createdBy]
-    //     );
+    async create(municipalityId, name, createdBy) {
+        const [rows] = await pool.query(
+            `CALL sp_barangays_create(?, ?, ?)`,
+            [municipalityId, name, createdBy]
+        );
 
-    //     return rows[0][0];
-    // },
+        return rows[0][0];
+    },
 
-    // async update(barangayId, name, description, contactNo, provinceId, municipalityId, barangayId, updatedBy, isActive) {
-    //     const [rows] = await pool.query(
-    //         `CALL sp_barangays_update(?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    //         [
-    //             barangayId,
-    //             name,
-    //             description,
-    //             contactNo,
-    //             provinceId,
-    //             municipalityId,
-    //             barangayId,
-    //             updatedBy,
-    //             isActive
-    //         ]
-    //     );
+    async update(barangayId, municipalityId, name, updatedBy, isActive) {
+        const [rows] = await pool.query(
+            `CALL sp_barangays_update(?, ?, ?, ?, ?)`,
+            [barangayId, municipalityId, name, updatedBy, isActive]
+        );
 
-    //     return rows[0][0];
-    // },
+        return rows[0][0];
+    },
 
-    // async delete(barangayId, userId) {
-    //     const [rows] = await pool.query(
-    //         `CALL sp_barangays_delete(?, ?)`,
-    //         [
-    //             barangayId,
-    //             userId
-    //         ]
-    //     );
+    async delete(barangayId, deletedBy) {
+        const [rows] = await pool.query(
+            `CALL sp_barangays_delete(?, ?)`,
+            [barangayId, deletedBy]
+        );
 
-    //     return rows[0][0];
-    // },
+        return rows[0][0];
+    },
 };
 
 module.exports = BarangayModel;

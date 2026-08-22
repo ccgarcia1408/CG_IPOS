@@ -6,6 +6,7 @@ DROP PROCEDURE IF EXISTS `sp_branches_update`$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_branches_update`(
     IN p_BranchId INT,
+    IN p_TenantId INT,
     IN p_Name VARCHAR(255),
     IN p_Description TEXT,
     IN p_ContactNo VARCHAR(30),
@@ -41,6 +42,18 @@ BEGIN
             0 AS Success,
             'Branch not found.' AS Message;
 
+    -- CHECK IF TENANT EXISTS
+    ELSEIF NOT EXISTS (
+        SELECT 1
+        FROM tenants
+        WHERE TenantId = p_TenantId
+          AND IsDeleted = 0
+    ) THEN
+
+        SELECT
+            0 AS Success,
+            'Selected tenant is invalid.' AS Message;
+
     -- CHECK FOR DUPLICATE BRANCH NAME (EXCLUDE CURRENT BRANCH)
     ELSEIF EXISTS (
         SELECT 1
@@ -60,6 +73,7 @@ BEGIN
 
         -- STORE OLD VALUES FOR AUDIT LOG
         SELECT JSON_OBJECT(
+            'TenantId', TenantId,
             'Name', NAME,
             'Description', Description,
             'ContactNo', ContactNo,
@@ -76,6 +90,7 @@ BEGIN
         -- UPDATE BRANCH RECORD
         UPDATE branches
         SET
+            TenantId = p_TenantId,
             NAME = TRIM(p_Name),
             Description = p_Description,
             ContactNo = p_ContactNo,
@@ -91,6 +106,7 @@ BEGIN
 
         -- STORE NEW VALUES FOR AUDIT LOG
         SET v_NewValue = JSON_OBJECT(
+            'TenantId', p_TenantId,
             'Name', TRIM(p_Name),
             'Description', p_Description,
             'ContactNo', p_ContactNo,

@@ -44,13 +44,16 @@ export class ApiError extends Error {
   }
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+export const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
 type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
   headers?: Record<string, string>;
   auth?: boolean;
+  // One-off bearer token to use instead of the stored session token -- e.g. the short-lived
+  // pending token issued mid-login, before the real session token exists.
+  token?: string;
 };
 
 async function parseResponse(response: Response) {
@@ -76,26 +79,31 @@ async function request<T = unknown>(
   endpoint: string,
   options: RequestOptions = {}
 ): Promise<T> {
-  const { method = "GET", body, headers = {}, auth = false } = options;
+  const { method = "GET", body, headers = {}, auth = false, token: tokenOverride } = options;
 
-  const token = localStorage.getItem("token");
+  const token = tokenOverride ?? localStorage.getItem("token");
 
   const finalHeaders: Record<string, string> = {
     ...headers,
   };
 
-  if (body !== undefined) {
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+
+  if (body !== undefined && !isFormData) {
     finalHeaders["Content-Type"] = "application/json";
   }
+  // For FormData, no Content-Type is set here -- the browser fills in
+  // "multipart/form-data; boundary=..." itself, which it can only do correctly if we don't
+  // set it manually.
 
-  if (auth && token) {
+  if ((auth || tokenOverride) && token) {
     finalHeaders["Authorization"] = `Bearer ${token}`;
   }
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     method,
     headers: finalHeaders,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: body === undefined ? undefined : isFormData ? (body as FormData) : JSON.stringify(body),
   });
 
   const data = await parseResponse(response);

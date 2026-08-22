@@ -4,6 +4,8 @@ USE `cg_ipos_db`$$
 
 DROP PROCEDURE IF EXISTS `sp_terminals_delete`$$
 
+-- Terminals will be referenced by RESTRICT FK from sales (Phase 5). "Delete" therefore
+-- deactivates rather than soft-deletes, matching sp_products_delete's precedent.
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_terminals_delete`(
     IN p_TerminalId INT,
     IN p_DeletedBy INT
@@ -18,7 +20,7 @@ BEGIN
 
         SELECT
             0 AS Success,
-            'Failed to delete terminal.' AS Message;
+            'Failed to deactivate terminal.' AS Message;
     END;
 
     START TRANSACTION;
@@ -34,12 +36,12 @@ BEGIN
     FROM terminals
     WHERE TerminalId = p_TerminalId;
 
-    -- SOFT DELETE
+    -- DEACTIVATE
     UPDATE terminals
     SET
-        IsDeleted = 1,
-        DeletedBy = p_DeletedBy,
-        DateDeleted = NOW()
+        IsActive = 0,
+        UpdatedAt = NOW(),
+        UpdatedBy = p_DeletedBy
     WHERE TerminalId = p_TerminalId
     AND IsDeleted = 0;
 
@@ -54,13 +56,13 @@ BEGIN
         CreatedBy
     )
     VALUES (
-        'DELETE',
-        'Deleted terminal',
+        'UPDATE',
+        'Deactivated terminal',
         'terminals',
         p_TerminalId,
         v_OldValue,
         JSON_OBJECT(
-            'IsDeleted', 1
+            'IsActive', 0
         ),
         p_DeletedBy
     );
@@ -69,7 +71,7 @@ BEGIN
 
     SELECT
         1 AS Success,
-        'Terminal deleted successfully.' AS Message;
+        'Terminal deactivated successfully.' AS Message;
 
 END$$
 

@@ -6,20 +6,34 @@ DROP PROCEDURE IF EXISTS `sp_users_getAll`$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_users_getAll`()
 BEGIN
-    SELECT 
+    SELECT
         u.UserId,
         u.EmployeeId,
+        u.RoleId,
+        r.Name AS RoleName,
         u.Username,
         u.Email,
+        e.ContactNo,
+        e.ProfilePicture,
         e.FirstName,
         e.MiddleName,
         e.LastName,
         e.Age,
         e.Address,
+        e.DateHired,
+        e.IsResigned,
+        u.LastLoginDate,
+        u.LastLogoutDate,
+        u.IsPasswordChanged,
+        u.IsAccountVerified,
+        u.AccountVerifiedDate,
+        u.IsActive,
         u.CreatedAt,
         u.UpdatedAt
     FROM users u
     INNER JOIN employees e ON e.EmployeeId = u.EmployeeId
+    LEFT JOIN roles r ON r.RoleId = u.RoleId
+    WHERE IFNULL(u.IsDeleted, 0) = 0
     ORDER BY u.UserId DESC;
 END$$
 

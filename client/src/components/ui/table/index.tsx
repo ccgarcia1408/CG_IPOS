@@ -64,6 +64,12 @@ const TableRow: React.FC<TableRowProps> = ({ children, className }) => {
 //   const CellTag = isHeader ? "th" : "td";
 //   return <CellTag className={` ${className}`}>{children}</CellTag>;
 // };
+// Single source of truth for header styling so every table in the app looks the same:
+// left-aligned, bold, uniform size. Pages should not re-specify alignment/weight/size on
+// isHeader cells — pass className only to add something beyond this (e.g. a fixed width).
+const HEADER_CELL_CLASSES =
+  "px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400";
+
 export function TableCell({
   isHeader,
   className,
@@ -72,7 +78,7 @@ export function TableCell({
 }: TableCellProps) {
   if (isHeader) {
     return (
-      <th className={className} {...props}>
+      <th className={[HEADER_CELL_CLASSES, className].filter(Boolean).join(" ")} {...props}>
         {children}
       </th>
     );

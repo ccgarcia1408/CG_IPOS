@@ -2,19 +2,27 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import {
   BoxCubeIcon,
+  BoxIcon,
+  BoxIconLine,
   CalenderIcon,
   ChevronDownIcon,
+  DocsIcon,
+  DollarLineIcon,
+  DownloadIcon,
+  FileIcon,
+  FolderIcon,
   GridIcon,
+  GroupIcon,
   HorizontaLDots,
   ListIcon,
   PageIcon,
   PieChartIcon,
   PlugInIcon,
   TableIcon,
+  TaskIcon,
   UserCircleIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
-import SidebarWidget from "./SidebarWidget";
 import { api } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { Menu } from "../types/Menu";
@@ -55,6 +63,24 @@ const getIconByName = (iconName?: string): React.ReactNode => {
       return <PlugInIcon />;
     case "BoxCubeIcon":
       return <BoxCubeIcon />;
+    case "BoxIcon":
+      return <BoxIcon />;
+    case "BoxIconLine":
+      return <BoxIconLine />;
+    case "GroupIcon":
+      return <GroupIcon />;
+    case "FolderIcon":
+      return <FolderIcon />;
+    case "DollarLineIcon":
+      return <DollarLineIcon />;
+    case "DownloadIcon":
+      return <DownloadIcon />;
+    case "TaskIcon":
+      return <TaskIcon />;
+    case "DocsIcon":
+      return <DocsIcon />;
+    case "FileIcon":
+      return <FileIcon />;
     default:
       return <GridIcon />;
   }

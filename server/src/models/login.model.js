@@ -13,6 +13,10 @@ const LoginModel = {
 
     async updateLastLogin(username) {
         await pool.query(`CALL sp_users_updateLastLoginDate(?)`, [username]);
+    },
+
+    async updateLastLogout(username) {
+        await pool.query(`CALL sp_users_updateLastLogoutDate(?)`, [username]);
     }
 };
 

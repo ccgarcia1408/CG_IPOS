@@ -21,13 +21,18 @@ const BranchService = {
     },
 
     async createBranch(data, userId) {
-        const { Name, Description, ContactNo, ProvinceId, MunicipalityId, BarangayId, OtherAddress } = data;
+        const { TenantId, Name, Description, ContactNo, ProvinceId, MunicipalityId, BarangayId, OtherAddress } = data;
 
         if (!Name) {
             throw new ApiError(400, "Branch name is required.");
         }
 
+        if (!TenantId) {
+            throw new ApiError(400, "Tenant is required.");
+        }
+
         const result = await BranchModel.create(
+            TenantId,
             Name,
             Description ?? null,
             ContactNo ?? null,
@@ -47,6 +52,7 @@ const BranchService = {
 
     async updateBranch(branchId, data, userId) {
         const {
+            TenantId,
             Name,
             Description,
             ContactNo,
@@ -65,6 +71,7 @@ const BranchService = {
 
         const result = await BranchModel.update(
             branchId,
+            TenantId ?? existingBranch.TenantId,
             Name ?? existingBranch.Name,
             Description ?? existingBranch.Description,
             ContactNo ?? existingBranch.ContactNo,

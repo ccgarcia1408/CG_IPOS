@@ -32,8 +32,6 @@ BEGIN
         'SKU', SKU,
         'CostPrice', CostPrice,
         'SellingPrice', SellingPrice,
-        'Stock', Stock,
-        'MinimumStock', MinimumStock,
         'ImagePath', ImagePath,
         'IsActive', IsActive,
         'IsDeleted', IsDeleted
@@ -42,12 +40,13 @@ BEGIN
     FROM products
     WHERE ProductId = p_ProductId;
 
-    -- SOFT DELETE
+    -- Products are retained for historical purchases, sales, and inventory movements.
+    -- Removing a product from normal use is an inactivation, not a deletion.
     UPDATE products
     SET
-        IsDeleted = 1,
-        DeletedBy = p_DeletedBy,
-        DateDeleted = NOW()
+        IsActive = 0,
+        UpdatedAt = NOW(),
+        UpdatedBy = p_DeletedBy
     WHERE ProductId = p_ProductId
     AND IsDeleted = 0;
 
@@ -62,13 +61,13 @@ BEGIN
         CreatedBy
     )
     VALUES (
-        'DELETE',
-        'Deleted product',
+        'UPDATE',
+        'Deactivated product',
         'products',
         p_ProductId,
         v_OldValue,
         JSON_OBJECT(
-            'IsDeleted', 1
+            'IsActive', 0
         ),
         p_DeletedBy
     );
@@ -77,7 +76,7 @@ BEGIN
 
     SELECT
         1 AS Success,
-        'Product deleted successfully.' AS Message;
+        'Product deactivated successfully.' AS Message;
 
 END$$
 

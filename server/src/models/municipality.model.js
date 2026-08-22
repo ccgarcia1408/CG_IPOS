@@ -21,45 +21,32 @@ const MunicipalityModel = {
         return rows[0] || [];
     },
 
-    // async create(name, description, contactNo, provinceId, municipalityId, barangayId, createdBy) {
-    //     const [rows] = await pool.query(
-    //         `CALL sp_municipalities_create(?, ?, ?, ?, ?, ?, ?)`,
-    //         [name, description, contactNo, provinceId, municipalityId, barangayId, createdBy]
-    //     );
+    async create(provinceId, name, createdBy) {
+        const [rows] = await pool.query(
+            `CALL sp_municipalities_create(?, ?, ?)`,
+            [provinceId, name, createdBy]
+        );
 
-    //     return rows[0][0];
-    // },
+        return rows[0][0];
+    },
 
-    // async update(municipalityId, name, description, contactNo, provinceId, municipalityId, barangayId, updatedBy, isActive) {
-    //     const [rows] = await pool.query(
-    //         `CALL sp_municipalities_update(?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    //         [
-    //             municipalityId,
-    //             name,
-    //             description,
-    //             contactNo,
-    //             provinceId,
-    //             municipalityId,
-    //             barangayId,
-    //             updatedBy,
-    //             isActive
-    //         ]
-    //     );
+    async update(municipalityId, provinceId, name, updatedBy, isActive) {
+        const [rows] = await pool.query(
+            `CALL sp_municipalities_update(?, ?, ?, ?, ?)`,
+            [municipalityId, provinceId, name, updatedBy, isActive]
+        );
 
-    //     return rows[0][0];
-    // },
+        return rows[0][0];
+    },
 
-    // async delete(municipalityId, userId) {
-    //     const [rows] = await pool.query(
-    //         `CALL sp_municipalities_delete(?, ?)`,
-    //         [
-    //             municipalityId,
-    //             userId
-    //         ]
-    //     );
+    async delete(municipalityId, deletedBy) {
+        const [rows] = await pool.query(
+            `CALL sp_municipalities_delete(?, ?)`,
+            [municipalityId, deletedBy]
+        );
 
-    //     return rows[0][0];
-    // },
+        return rows[0][0];
+    },
 };
 
 module.exports = MunicipalityModel;

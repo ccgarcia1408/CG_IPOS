@@ -4,6 +4,9 @@ USE `cg_ipos_db`$$
 
 DROP PROCEDURE IF EXISTS `sp_categories_delete`$$
 
+-- Categories are referenced by RESTRICT FK from products. getById filters on IsDeleted, so a
+-- true soft-delete would make a category permanently unfetchable by ID once any product
+-- references it. "Delete" therefore deactivates, matching sp_products_delete's precedent.
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_categories_delete`(
     IN p_CategoryId INT,
     IN p_DeletedBy INT
@@ -18,12 +21,11 @@ BEGIN
 
         SELECT
             0 AS Success,
-            'Failed to delete category.' AS Message;
+            'Failed to deactivate category.' AS Message;
     END;
 
     START TRANSACTION;
 
-    -- OLD VALUE
     SELECT JSON_OBJECT(
         'BranchId', BranchId,
         'Name', Name,
@@ -35,16 +37,14 @@ BEGIN
     FROM categories
     WHERE CategoryId = p_CategoryId;
 
-    -- SOFT DELETE
     UPDATE categories
     SET
-        IsDeleted = 1,
-        DeletedBy = p_DeletedBy,
-        DateDeleted = NOW()
+        IsActive = 0,
+        UpdatedAt = NOW(),
+        UpdatedBy = p_DeletedBy
     WHERE CategoryId = p_CategoryId
     AND IsDeleted = 0;
 
-    -- AUDIT LOG
     INSERT INTO audit_logs (
         ActionType,
         `Action`,
@@ -55,13 +55,13 @@ BEGIN
         CreatedBy
     )
     VALUES (
-        'DELETE',
-        'Deleted category',
+        'UPDATE',
+        'Deactivated category',
         'categories',
         p_CategoryId,
         v_OldValue,
         JSON_OBJECT(
-            'IsDeleted', 1
+            'IsActive', 0
         ),
         p_DeletedBy
     );
@@ -70,7 +70,7 @@ BEGIN
 
     SELECT
         1 AS Success,
-        'Category deleted successfully.' AS Message;
+        'Category deactivated successfully.' AS Message;
 
 END$$
 

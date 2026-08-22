@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
@@ -31,6 +32,18 @@ const limiter = rateLimit({
 });
 
 app.use("/api", limiter);
+
+// Uploaded files (profile pictures, etc.) -- served cross-origin since the client (5173) and
+// this API (3000) are different origins; helmet's default same-origin CORP would otherwise
+// block <img> loads.
+app.use(
+  "/uploads",
+  (req, res, next) => {
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    next();
+  },
+  express.static(path.join(__dirname, "../uploads"))
+);
 
 app.get("/", (req, res) => {
   res.status(200).json({
