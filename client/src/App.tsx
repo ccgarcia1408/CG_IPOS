@@ -36,6 +36,7 @@ import OfficialReceiptAssignment from "./pages/References/OfficialReceiptAssignm
 import DiscountMaintenance from "./pages/References/DiscountMaintenance";
 import TaxMaintenance from "./pages/References/TaxMaintenance";
 import InventoryLogs from "./pages/Main/InventoryLogs";
+import DatabaseMaintenance from "./pages/System/DatabaseMaintenance";
 import { Toaster } from "sonner";
 
 export default function App() {
@@ -67,6 +68,9 @@ export default function App() {
             <Route path="/or-assignment-maintenance" element={<OfficialReceiptAssignment />} />
             <Route path="/discount-maintenance" element={<DiscountMaintenance />} />
             <Route path="/tax-maintenance" element={<TaxMaintenance />} />
+
+            {/* System Configuration */}
+            <Route path="/database-maintenance" element={<DatabaseMaintenance />} />
 
             {/* Main Pages Links */}
             <Route path="/products" element={<Products />} />
