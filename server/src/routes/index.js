@@ -25,6 +25,7 @@ const officialReceiptAssignmentRoutes = require("./officialReceiptAssignment.rou
 const discountRoutes = require("./discount.routes");
 const taxRoutes = require("./tax.routes");
 const forgotPasswordRoutes = require("./forgotPassword.routes");
+const databaseMaintenanceRoutes = require("./databaseMaintenance.routes");
 
 router.use("/login", loginRoutes);
 
@@ -73,5 +74,7 @@ router.use("/or-assignments", officialReceiptAssignmentRoutes);
 router.use("/discounts", discountRoutes);
 
 router.use("/taxes", taxRoutes);
+
+router.use("/database-maintenance", databaseMaintenanceRoutes);
 
 module.exports = router;
