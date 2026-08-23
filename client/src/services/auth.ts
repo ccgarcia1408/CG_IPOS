@@ -28,6 +28,22 @@ export async function selectBranch(
   );
 }
 
+export async function requestPasswordReset(email: string): Promise<{ message?: string }> {
+  return await api.post("/api/forgot-password/request", { Email: email });
+}
+
+export async function verifyResetCode(email: string, code: string): Promise<{ message?: string }> {
+  return await api.post("/api/forgot-password/verify-code", { Email: email, Code: code });
+}
+
+export async function resetPassword(
+  email: string,
+  code: string,
+  newPassword: string
+): Promise<{ message?: string }> {
+  return await api.post("/api/forgot-password/reset", { Email: email, Code: code, NewPassword: newPassword });
+}
+
 // export async function login(payload: LoginRequest): Promise<LoginResponse> {
 //   const response = await api.post<LoginResponse>("/api/login", payload);
 //   return response.data;
