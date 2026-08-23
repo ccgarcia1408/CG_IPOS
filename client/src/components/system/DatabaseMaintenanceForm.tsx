@@ -1,9 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { api } from "../../services/api";
 import { DatabaseBackup } from "../../types/DatabaseBackup";
+import DatePicker from "../form/date-picker";
+import Label from "../form/Label";
 import Modal from "../ui/modal/Modal";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../ui/table";
+
+const dateInputClass =
+  "h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700 dark:focus:border-brand-800";
 
 const errorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
@@ -24,6 +29,7 @@ export default function DatabaseMaintenanceForm() {
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [filterResetKey, setFilterResetKey] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -101,10 +107,20 @@ export default function DatabaseMaintenanceForm() {
   const handlePrevious = () => setCurrentPage((current) => Math.max(current - 1, 1));
   const handleNext = () => setCurrentPage((current) => Math.min(current + 1, totalPages));
 
+  const handleDateFromChange = useCallback((_dates: Date[], dateStr: string) => {
+    setDateFrom(dateStr);
+  }, []);
+
+  const handleDateToChange = useCallback((_dates: Date[], dateStr: string) => {
+    setDateTo(dateStr);
+  }, []);
+
   const clearFilters = () => {
     setSearch("");
     setDateFrom("");
     setDateTo("");
+    // flatpickr manages its own displayed text -- remount both pickers to clear it visually.
+    setFilterResetKey((key) => key + 1);
   };
 
   return (
@@ -127,41 +143,41 @@ export default function DatabaseMaintenanceForm() {
 
       <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-          <div className="relative md:col-span-2">
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search by filename..."
-              className="w-full rounded-lg border border-gray-300 py-2 pl-4 pr-16 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white"
-            />
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-3 py-1 text-xs font-medium text-red-500 transition hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/5"
-              >
-                Clear
-              </button>
-            )}
+          <div className="md:col-span-2">
+            <Label htmlFor="backup-search">Search</Label>
+            <div className="relative">
+              <input
+                id="backup-search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search by filename..."
+                className={`${dateInputClass} pr-16`}
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-3 py-1 text-xs font-medium text-red-500 transition hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/5"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">From</label>
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(event) => setDateFrom(event.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">To</label>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(event) => setDateTo(event.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white"
-            />
-          </div>
+          <DatePicker
+            key={`from-${filterResetKey}`}
+            id={`backup-date-from-${filterResetKey}`}
+            label="From"
+            placeholder="Select start date"
+            onChange={handleDateFromChange}
+          />
+          <DatePicker
+            key={`to-${filterResetKey}`}
+            id={`backup-date-to-${filterResetKey}`}
+            label="To"
+            placeholder="Select end date"
+            onChange={handleDateToChange}
+          />
         </div>
         {(search || dateFrom || dateTo) && (
           <button
