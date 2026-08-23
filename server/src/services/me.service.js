@@ -4,10 +4,22 @@ const path = require("path");
 const MeModel = require("../models/me.model");
 const EmployeeModel = require("../models/employee.model");
 const LoginService = require("./login.service");
+const UserService = require("./user.service");
 const ApiError = require("../utils/ApiError");
 const { PROFILE_PICTURES_DIR } = require("../middlewares/upload.middleware");
 
 const MeService = {
+    // updateMeSchema only ever lets FirstName/MiddleName/LastName/Email/Age/Address/ContactNo
+    // through -- RoleId/IsActive/IsAccountVerified/Username/Password are never present in `data`,
+    // so UserService.updateUser's existing merge (`data.X ?? existingUser.X`) leaves every
+    // admin-only field untouched. Reuses the same tested update path User Maintenance uses
+    // instead of duplicating its merge/uniqueness-check logic here.
+    async updateProfile(userId, data) {
+        await UserService.updateUser(userId, data, userId);
+        return await LoginService.getCurrentUser(userId);
+    },
+
+
     async updateProfilePicture(userId, file) {
         if (!file) {
             throw new ApiError(400, "A profile picture file is required.");

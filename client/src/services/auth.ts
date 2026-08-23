@@ -16,6 +16,22 @@ export async function updateProfilePicture(
   return await api.put("/api/auth/me/profile-picture", formData, { auth: true });
 }
 
+export interface UpdateProfilePayload {
+  FirstName?: string;
+  MiddleName?: string | null;
+  LastName?: string;
+  Email?: string;
+  Age?: number | null;
+  Address?: string | null;
+  ContactNo?: string | null;
+}
+
+export async function updateProfile(
+  payload: UpdateProfilePayload
+): Promise<{ success?: boolean; message?: string; data?: UserAuth }> {
+  return await api.put("/api/auth/me", payload, { auth: true });
+}
+
 export async function selectBranch(
   pendingToken: string,
   tenantId: number,
