@@ -17,6 +17,11 @@ const logout = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, "Logged out successfully", null));
 });
 
+const updateProfile = asyncHandler(async (req, res) => {
+  const user = await MeService.updateProfile(req.user.UserId, req.body);
+  res.status(200).json(new ApiResponse(200, "Profile updated successfully", user));
+});
+
 const updateProfilePicture = asyncHandler(async (req, res, next) => {
   uploadProfilePicture(req, res, async (err) => {
     if (err) {
@@ -36,5 +41,6 @@ const updateProfilePicture = asyncHandler(async (req, res, next) => {
 module.exports = {
   me,
   logout,
+  updateProfile,
   updateProfilePicture,
 };
