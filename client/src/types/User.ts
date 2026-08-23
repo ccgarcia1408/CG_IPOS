@@ -25,4 +25,5 @@ export type User = {
     DateHired: string | null;
     IsResigned: number;
     ProfilePicture: string | null;
+    BranchNames: string | null;
 };
