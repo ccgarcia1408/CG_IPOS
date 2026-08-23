@@ -24,8 +24,11 @@ const saleRoutes = require("./sale.routes");
 const officialReceiptAssignmentRoutes = require("./officialReceiptAssignment.routes");
 const discountRoutes = require("./discount.routes");
 const taxRoutes = require("./tax.routes");
+const forgotPasswordRoutes = require("./forgotPassword.routes");
 
 router.use("/login", loginRoutes);
+
+router.use("/forgot-password", forgotPasswordRoutes);
 
 router.use("/users", userRoutes);
 

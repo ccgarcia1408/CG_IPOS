@@ -78,6 +78,21 @@ const UserModel = {
     );
 
     return rows[0][0];
+  },
+
+  async setResetCode(email, resetCode, expiresAt) {
+    const [rows] = await pool.query(`CALL sp_users_setResetCode(?, ?, ?)`, [email, resetCode, expiresAt]);
+    return rows[0][0];
+  },
+
+  async verifyResetCode(email, resetCode) {
+    const [rows] = await pool.query(`CALL sp_users_verifyResetCode(?, ?)`, [email, resetCode]);
+    return rows[0][0];
+  },
+
+  async resetPassword(email, resetCode, newPasswordHash) {
+    const [rows] = await pool.query(`CALL sp_users_resetPassword(?, ?, ?)`, [email, resetCode, newPasswordHash]);
+    return rows[0][0];
   }
 };
 
