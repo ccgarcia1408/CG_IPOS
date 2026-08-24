@@ -460,18 +460,20 @@ export default function UserMaintenanceForm() {
           <div className="max-w-full overflow-x-auto">
             <Table>
               <TableHeader className="bg-gray-50 dark:bg-gray-900/30"><TableRow>
-                {['Username', 'Name', 'Email', 'Contact No.', 'Role', 'Status', 'Actions'].map((header) => <TableCell key={header} isHeader>{header}</TableCell>)}
+                {['Username', 'Name', 'Email', 'Branch', 'Role', 'Status', 'Actions'].map((header) => <TableCell key={header} isHeader>{header}</TableCell>)}
               </TableRow></TableHeader>
               <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
                 {paginatedUsers.length ? paginatedUsers.map((user) => {
                   const name = [user.FirstName, user.MiddleName, user.LastName].filter(Boolean).join(" ");
                   const isActive = Number(user.IsActive) === 1;
                   const isVerified = Number(user.IsAccountVerified) === 1;
+                  const isAdmin = String(user.RoleId) === ADMIN_ROLE_ID;
+                  const branchDisplay = isAdmin ? "Administrator" : (user.BranchNames || "Not yet assigned");
                   return <TableRow key={user.UserId} className="transition hover:bg-gray-50 dark:hover:bg-white/[0.02]">
                     <TableCell className="px-5 py-4 font-medium text-gray-800 dark:text-white">{user.Username}</TableCell>
                     <TableCell className="px-5 py-4 text-gray-600 dark:text-gray-400">{name}</TableCell>
                     <TableCell className="px-5 py-4 text-gray-600 dark:text-gray-400">{user.Email}</TableCell>
-                    <TableCell className="px-5 py-4 text-gray-600 dark:text-gray-400">{user.ContactNo || "-"}</TableCell>
+                    <TableCell className="px-5 py-4 text-gray-600 dark:text-gray-400">{branchDisplay}</TableCell>
                     <TableCell className="px-5 py-4 text-gray-600 dark:text-gray-400">{user.RoleName || <span className="text-red-500">No role</span>}</TableCell>
                     <TableCell className="px-5 py-4"><div className="flex flex-col gap-1"><Badge size="sm" color={isActive ? "success" : "error"}>{isActive ? 'Active' : 'Inactive'}</Badge>{!isVerified && <Badge size="sm" color="warning">Unverified</Badge>}</div></TableCell>
                     <TableCell className="px-5 py-4"><div className="flex items-center justify-center gap-2">
