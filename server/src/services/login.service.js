@@ -70,7 +70,7 @@ const LoginService = {
             const token = jwt.sign(
                 { UserId: user.UserId, Username: user.Username, RoleId: user.RoleId },
                 process.env.JWT_SECRET,
-                { expiresIn: process.env.JWT_EXPIRES_IN || "1h" }
+                { expiresIn: process.env.JWT_EXPIRES_IN || "6h" }
             );
 
             return {
@@ -140,7 +140,7 @@ const LoginService = {
                 BranchId: Number(branchId)
             },
             process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRES_IN || "1h" }
+            { expiresIn: process.env.JWT_EXPIRES_IN || "6h" }
         );
 
         return {

@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { UserAuth } from "../types/UserAuth";
-import { api } from "../services/api";
+import { api, ApiError } from "../services/api";
 
 type LoginPayload = {
   token: string;
@@ -89,7 +89,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUserState(latestUser);
     } catch (error) {
       console.error("Failed to fetch current user:", error);
-      logout();
+
+      // Session is token-based: only an actual auth failure (expired/invalid/revoked token --
+      // 401/403) should end it. Anything else (rate limiting, a dropped connection, a transient
+      // 500) is not evidence the session is invalid, so it must not log the user out -- just
+      // skip this poll and let the next one retry.
+      const isAuthFailure = error instanceof ApiError && (error.status === 401 || error.status === 403);
+
+      if (isAuthFailure) {
+        logout();
+      }
     }
   };
 
@@ -127,9 +136,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     fetchCurrentUser();
 
+    // Re-check every 60s (was 10s) -- still catches an admin deactivating this account promptly,
+    // without contributing nearly as much background load toward the shared /api rate limit.
     const interval = setInterval(() => {
       fetchCurrentUser();
-    }, 10000); // every 10 seconds
+    }, 60000);
 
     return () => clearInterval(interval);
   }, [token]);
