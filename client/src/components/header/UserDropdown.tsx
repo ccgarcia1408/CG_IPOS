@@ -3,11 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { useAuth } from "../../context/AuthContext";
+import { API_BASE_URL } from "../../services/api";
+
+const DEFAULT_AVATAR = "/images/user/owner.jpg";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const { logout, user } = useAuth();
   const navigate = useNavigate();
+
+  const avatarSrc = user?.ProfilePicture ? `${API_BASE_URL}${user.ProfilePicture}` : DEFAULT_AVATAR;
 
   // console.log("UserDropdown render - user:", user);
 
@@ -32,7 +37,7 @@ export default function UserDropdown() {
         className="flex items-center text-gray-700 dropdown-toggle dark:text-gray-400"
       >
         <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
-          <img src="/images/user/owner.jpg" alt="User" />
+          <img src={avatarSrc} alt="User" className="h-full w-full object-cover" />
         </span>
 
         <span className="block mr-1 font-medium text-theme-sm">
