@@ -37,6 +37,34 @@ import DiscountMaintenance from "./pages/References/DiscountMaintenance";
 import TaxMaintenance from "./pages/References/TaxMaintenance";
 import InventoryLogs from "./pages/Main/InventoryLogs";
 import DatabaseMaintenance from "./pages/System/DatabaseMaintenance";
+import SalesSummaryReport from "./pages/Reports/SalesSummaryReport";
+import SalesTrendReport from "./pages/Reports/SalesTrendReport";
+import SalesByPaymentMethodReport from "./pages/Reports/SalesByPaymentMethodReport";
+import SalesByBranchReport from "./pages/Reports/SalesByBranchReport";
+import SalesByTerminalReport from "./pages/Reports/SalesByTerminalReport";
+import TopProductsReport from "./pages/Reports/TopProductsReport";
+import TopCategoriesReport from "./pages/Reports/TopCategoriesReport";
+import VoidedSalesReport from "./pages/Reports/VoidedSalesReport";
+import ReturnReasonsReport from "./pages/Reports/ReturnReasonsReport";
+import TopReturnedProductsReport from "./pages/Reports/TopReturnedProductsReport";
+import SalesDetailReport from "./pages/Reports/SalesDetailReport";
+import InventorySummaryReport from "./pages/Reports/InventorySummaryReport";
+import LowStockReport from "./pages/Reports/LowStockReport";
+import OutOfStockReport from "./pages/Reports/OutOfStockReport";
+import ExpiringProductsReport from "./pages/Reports/ExpiringProductsReport";
+import StockAdjustmentSummaryReport from "./pages/Reports/StockAdjustmentSummaryReport";
+import StockAdjustmentDetailReport from "./pages/Reports/StockAdjustmentDetailReport";
+import PurchasingSummaryReport from "./pages/Reports/PurchasingSummaryReport";
+import PendingPurchasesReport from "./pages/Reports/PendingPurchasesReport";
+import SupplierSummaryReport from "./pages/Reports/SupplierSummaryReport";
+import PurchaseDetailReport from "./pages/Reports/PurchaseDetailReport";
+import CashierPerformanceReport from "./pages/Reports/CashierPerformanceReport";
+import ActiveShiftsReport from "./pages/Reports/ActiveShiftsReport";
+import ShiftClosingReport from "./pages/Reports/ShiftClosingReport";
+import TerminalStatusReport from "./pages/Reports/TerminalStatusReport";
+import OfficialReceiptSummaryReport from "./pages/Reports/OfficialReceiptSummaryReport";
+import OrAssignmentStatusReport from "./pages/Reports/OrAssignmentStatusReport";
+import AuditLogReport from "./pages/Reports/AuditLogReport";
 import { Toaster } from "sonner";
 
 export default function App() {
@@ -71,6 +99,36 @@ export default function App() {
 
             {/* System Configuration */}
             <Route path="/database-maintenance" element={<DatabaseMaintenance />} />
+
+            {/* Reports */}
+            <Route path="/reports/sales-summary" element={<SalesSummaryReport />} />
+            <Route path="/reports/sales-trend" element={<SalesTrendReport />} />
+            <Route path="/reports/sales-by-payment-method" element={<SalesByPaymentMethodReport />} />
+            <Route path="/reports/sales-by-branch" element={<SalesByBranchReport />} />
+            <Route path="/reports/sales-by-terminal" element={<SalesByTerminalReport />} />
+            <Route path="/reports/top-products" element={<TopProductsReport />} />
+            <Route path="/reports/top-categories" element={<TopCategoriesReport />} />
+            <Route path="/reports/voided-sales" element={<VoidedSalesReport />} />
+            <Route path="/reports/return-reasons" element={<ReturnReasonsReport />} />
+            <Route path="/reports/top-returned-products" element={<TopReturnedProductsReport />} />
+            <Route path="/reports/sales-detail" element={<SalesDetailReport />} />
+            <Route path="/reports/inventory-summary" element={<InventorySummaryReport />} />
+            <Route path="/reports/low-stock" element={<LowStockReport />} />
+            <Route path="/reports/out-of-stock" element={<OutOfStockReport />} />
+            <Route path="/reports/expiring-products" element={<ExpiringProductsReport />} />
+            <Route path="/reports/stock-adjustment-summary" element={<StockAdjustmentSummaryReport />} />
+            <Route path="/reports/stock-adjustment-detail" element={<StockAdjustmentDetailReport />} />
+            <Route path="/reports/purchasing-summary" element={<PurchasingSummaryReport />} />
+            <Route path="/reports/pending-purchases" element={<PendingPurchasesReport />} />
+            <Route path="/reports/supplier-summary" element={<SupplierSummaryReport />} />
+            <Route path="/reports/purchase-detail" element={<PurchaseDetailReport />} />
+            <Route path="/reports/cashier-performance" element={<CashierPerformanceReport />} />
+            <Route path="/reports/active-shifts" element={<ActiveShiftsReport />} />
+            <Route path="/reports/shift-closing" element={<ShiftClosingReport />} />
+            <Route path="/reports/terminal-status" element={<TerminalStatusReport />} />
+            <Route path="/reports/official-receipt-summary" element={<OfficialReceiptSummaryReport />} />
+            <Route path="/reports/or-assignment-status" element={<OrAssignmentStatusReport />} />
+            <Route path="/reports/audit-log" element={<AuditLogReport />} />
 
             {/* Main Pages Links */}
             <Route path="/products" element={<Products />} />

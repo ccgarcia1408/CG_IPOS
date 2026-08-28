@@ -4,7 +4,10 @@ const ApiError = require("../utils/ApiError");
 const VALID_GRANULARITIES = new Set(["HOURLY", "DAILY", "WEEKLY", "MONTHLY"]);
 const VALID_SORT_BY = new Set(["QUANTITY", "REVENUE"]);
 const DEFAULT_TOP_N = 10;
-const MAX_TOP_N = 50;
+// Raised from 50 -- the Reports pages reuse these same endpoints for full, unpaginated detail
+// reports (e.g. every sale in a date range), not just the dashboard's "top 10" widgets. The
+// dashboard itself still always requests small limits, so this is purely a higher ceiling.
+const MAX_TOP_N = 5000;
 const DEFAULT_EXPIRING_DAYS = 30;
 const VALID_EXPIRING_THRESHOLDS = new Set([7, 15, 30]);
 
