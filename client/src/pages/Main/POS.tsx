@@ -81,10 +81,25 @@ export default function POS() {
   useEffect(() => {
     api.get<{ data: Branch[] }>("/api/branches/active", { auth: true }).then((r) => setBranches(r.data ?? [])).catch(() => toast.error("Failed to load branches."));
     api.get<{ data: Terminal[] }>("/api/terminals/active", { auth: true }).then((r) => setTerminals(r.data ?? [])).catch(() => toast.error("Failed to load terminals."));
-    api.get<{ data: PaymentMethod[] }>("/api/payment-methods/active", { auth: true }).then((r) => setPaymentMethods(r.data ?? [])).catch(() => toast.error("Failed to load payment methods."));
+    api.get<{ data: PaymentMethod[] }>("/api/payment-methods/active", { auth: true }).then((r) => {
+      const methods = r.data ?? [];
+      setPaymentMethods(methods);
+      const cashMethod = methods.find((m) => Number(m.IsCash) === 1);
+      if (cashMethod) setPaymentMethodId(String(cashMethod.PaymentMethodId));
+    }).catch(() => toast.error("Failed to load payment methods."));
     api.get<{ data: Product[] }>("/api/products/active", { auth: true }).then((r) => setProducts(r.data ?? [])).catch(() => toast.error("Failed to load products."));
-    api.get<{ data: Discount[] }>("/api/discounts/active", { auth: true }).then((r) => setDiscounts(r.data ?? [])).catch(() => toast.error("Failed to load discounts."));
-    api.get<{ data: Tax[] }>("/api/taxes/active", { auth: true }).then((r) => setTaxes(r.data ?? [])).catch(() => toast.error("Failed to load taxes."));
+    api.get<{ data: Discount[] }>("/api/discounts/active", { auth: true }).then((r) => {
+      const items = r.data ?? [];
+      setDiscounts(items);
+      const defaultDiscount = items.find((d) => Number(d.IsDefault) === 1);
+      if (defaultDiscount) setDiscountId(String(defaultDiscount.DiscountId));
+    }).catch(() => toast.error("Failed to load discounts."));
+    api.get<{ data: Tax[] }>("/api/taxes/active", { auth: true }).then((r) => {
+      const items = r.data ?? [];
+      setTaxes(items);
+      const defaultTax = items.find((t) => Number(t.IsDefault) === 1);
+      if (defaultTax) setTaxId(String(defaultTax.TaxId));
+    }).catch(() => toast.error("Failed to load taxes."));
     api.get<{ data: ActiveOfficialReceiptAssignment | null }>("/api/or-assignments/me/active", { auth: true })
       .then((r) => setOrAssignment(r.data ?? null))
       .catch(() => toast.error("Failed to load your official receipt assignment."));
@@ -229,8 +244,10 @@ export default function POS() {
 
   const resetSale = () => {
     setCart([]);
-    setDiscountId("");
-    setTaxId("");
+    const defaultDiscount = discounts.find((d) => Number(d.IsDefault) === 1);
+    setDiscountId(defaultDiscount ? String(defaultDiscount.DiscountId) : "");
+    const defaultTax = taxes.find((t) => Number(t.IsDefault) === 1);
+    setTaxId(defaultTax ? String(defaultTax.TaxId) : "");
     setAmountPaid("");
     setProductPick("");
     setBarcode("");

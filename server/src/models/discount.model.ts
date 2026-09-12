@@ -18,24 +18,25 @@ const DiscountModel = {
         return rows[0][0] || null;
     },
 
-    async create(name: SqlParam, description: SqlParam, type: SqlParam, value: SqlParam, createdBy: SqlParam) {
+    async create(name: SqlParam, description: SqlParam, type: SqlParam, value: SqlParam, isDefault: SqlParam, createdBy: SqlParam) {
         const [rows] = await pool.query<RowDataPacket[][]>(
-            `CALL sp_discounts_create(?, ?, ?, ?, ?)`,
-            [name, description, type, value, createdBy]
+            `CALL sp_discounts_create(?, ?, ?, ?, ?, ?)`,
+            [name, description, type, value, isDefault, createdBy]
         );
 
         return rows[0][0];
     },
 
-    async update(discountId: SqlParam, name: SqlParam, description: SqlParam, type: SqlParam, value: SqlParam, updatedBy: SqlParam, isActive: SqlParam) {
+    async update(discountId: SqlParam, name: SqlParam, description: SqlParam, type: SqlParam, value: SqlParam, isDefault: SqlParam, updatedBy: SqlParam, isActive: SqlParam) {
         const [rows] = await pool.query<RowDataPacket[][]>(
-            `CALL sp_discounts_update(?, ?, ?, ?, ?, ?, ?)`,
+            `CALL sp_discounts_update(?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 discountId,
                 name,
                 description,
                 type,
                 value,
+                isDefault,
                 updatedBy,
                 isActive
             ]

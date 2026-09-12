@@ -6,6 +6,7 @@ export interface Discount {
   Description: string | null;
   Type: DiscountType;
   Value: number;
+  IsDefault?: number;
   IsDeleted: number;
   DeletedBy: number | null;
   DateDeleted: string | null;

@@ -8,6 +8,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_payment_methods_update`(
     IN p_PaymentMethodId INT,
     IN p_Name VARCHAR(255),
     IN p_Description TEXT,
+    IN p_IsCash TINYINT,
     IN p_UpdatedBy INT,
     IN p_IsActive TINYINT
 )
@@ -31,6 +32,7 @@ BEGIN
     SELECT JSON_OBJECT(
         'Name', `Name`,
         'Description', `Description`,
+        'IsCash', IsCash,
         'IsActive', `IsActive`
     )
     INTO v_OldValue
@@ -42,6 +44,7 @@ BEGIN
     SET
         `Name` = p_Name,
         `Description` = p_Description,
+        IsCash = IFNULL(p_IsCash, 0),
         UpdatedAt = NOW(),
         UpdatedBy = p_UpdatedBy,
         IsActive = p_IsActive
@@ -52,6 +55,7 @@ BEGIN
     SET v_NewValue = JSON_OBJECT(
         'Name', p_Name,
         'Description', p_Description,
+        'IsCash', IFNULL(p_IsCash, 0),
         'IsActive', p_IsActive
     );
 

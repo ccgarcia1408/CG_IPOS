@@ -8,6 +8,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_taxes_create`(
     IN p_Name VARCHAR(100),
     IN p_Description VARCHAR(255),
     IN p_Rate DECIMAL(5,2),
+    IN p_IsDefault TINYINT,
     IN p_CreatedBy INT
 )
 BEGIN
@@ -29,8 +30,8 @@ BEGIN
     ELSE
         START TRANSACTION;
 
-        INSERT INTO taxes (Name, Description, Rate, IsDeleted, CreatedAt, CreatedBy, IsActive)
-        VALUES (TRIM(p_Name), p_Description, p_Rate, 0, NOW(), p_CreatedBy, 1);
+        INSERT INTO taxes (Name, Description, Rate, IsDefault, IsDeleted, CreatedAt, CreatedBy, IsActive)
+        VALUES (TRIM(p_Name), p_Description, p_Rate, IFNULL(p_IsDefault, 0), 0, NOW(), p_CreatedBy, 1);
 
         SET v_TaxId = LAST_INSERT_ID();
 
@@ -38,7 +39,7 @@ BEGIN
         VALUES (
             'CREATE', 'Created tax', 'taxes', v_TaxId,
             NULL,
-            JSON_OBJECT('Name', TRIM(p_Name), 'Rate', p_Rate),
+            JSON_OBJECT('Name', TRIM(p_Name), 'Rate', p_Rate, 'IsDefault', IFNULL(p_IsDefault, 0)),
             p_CreatedBy
         );
 

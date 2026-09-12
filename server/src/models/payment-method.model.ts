@@ -18,22 +18,23 @@ const PaymentMethodModel = {
         return rows[0][0] || null;
     },
 
-    async create(name: SqlParam, description: SqlParam, createdBy: SqlParam) {
+    async create(name: SqlParam, description: SqlParam, isCash: SqlParam, createdBy: SqlParam) {
         const [rows] = await pool.query<RowDataPacket[][]>(
-            `CALL sp_payment_methods_create(?, ?, ?)`,
-            [name, description, createdBy]
+            `CALL sp_payment_methods_create(?, ?, ?, ?)`,
+            [name, description, isCash, createdBy]
         );
 
         return rows[0][0];
     },
 
-    async update(paymentMethodId: SqlParam, name: SqlParam, description: SqlParam, updatedBy: SqlParam, isActive: SqlParam) {
+    async update(paymentMethodId: SqlParam, name: SqlParam, description: SqlParam, isCash: SqlParam, updatedBy: SqlParam, isActive: SqlParam) {
         const [rows] = await pool.query<RowDataPacket[][]>(
-            `CALL sp_payment_methods_update(?, ?, ?, ?, ?)`,
+            `CALL sp_payment_methods_update(?, ?, ?, ?, ?, ?)`,
             [
                 paymentMethodId,
                 name,
                 description,
+                isCash,
                 updatedBy,
                 isActive
             ]

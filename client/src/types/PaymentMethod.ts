@@ -1,6 +1,7 @@
 export interface PaymentMethod {
   PaymentMethodId: number;
   Name: string;
+  IsCash?: number;
   Description: string | null;
   IsDeleted: number;
   DeletedBy: number | null;

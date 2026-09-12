@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import SearchableSelect from "../form/SearchableSelect";
+import DatePicker from "../form/date-picker";
 import { useAuth } from "../../context/AuthContext";
 import { api } from "../../services/api";
 import { decodeJwtPayload } from "../../utils/jwt";
@@ -102,19 +103,23 @@ export default function DashboardFilterBar({ onChange }: DashboardFilterBarProps
 
         {preset === "CUSTOM" && (
           <div className="flex items-center gap-2">
-            <input
-              type="date"
-              value={customStart}
-              onChange={(event) => setCustomStart(event.target.value)}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white"
-            />
+            <div className="w-36">
+              <DatePicker
+                id="report-filter-custom-start"
+                placeholder="Start date"
+                defaultDate={customStart}
+                onChange={(_dates, dateStr) => setCustomStart(dateStr)}
+              />
+            </div>
             <span className="text-sm text-gray-500 dark:text-gray-400">to</span>
-            <input
-              type="date"
-              value={customEnd}
-              onChange={(event) => setCustomEnd(event.target.value)}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white"
-            />
+            <div className="w-36">
+              <DatePicker
+                id="report-filter-custom-end"
+                placeholder="End date"
+                defaultDate={customEnd}
+                onChange={(_dates, dateStr) => setCustomEnd(dateStr)}
+              />
+            </div>
           </div>
         )}
       </div>

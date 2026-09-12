@@ -21,7 +21,7 @@ const TaxService = {
     },
 
     async createTax(data: any, userId: any) {
-        const { Name, Description, Rate } = data;
+        const { Name, Description, Rate, IsDefault } = data;
 
         if (!Name) {
             throw new ApiError(400, "Tax name is required.");
@@ -31,6 +31,7 @@ const TaxService = {
             Name,
             Description ?? null,
             Rate ?? 0,
+            IsDefault ?? 0,
             userId
         );
 
@@ -46,6 +47,7 @@ const TaxService = {
             Name,
             Description,
             Rate,
+            IsDefault,
             IsActive
         } = data;
 
@@ -60,6 +62,7 @@ const TaxService = {
             Name ?? existingTax.Name,
             Description ?? existingTax.Description,
             Rate ?? existingTax.Rate,
+            IsDefault ?? existingTax.IsDefault,
             userId,
             IsActive ?? existingTax.IsActive
         );

@@ -3,6 +3,7 @@ export interface Tax {
   Name: string;
   Description: string | null;
   Rate: number;
+  IsDefault?: number;
   IsDeleted: number;
   DeletedBy: number | null;
   DateDeleted: string | null;
