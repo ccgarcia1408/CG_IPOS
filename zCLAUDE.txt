@@ -1,0 +1,713 @@
+# CG_IPOS — Claude Code Project Instructions
+
+## 1. Purpose
+
+This file defines the mandatory instructions, architecture rules,
+development workflow, validation requirements, database safety rules,
+Git/GitHub workflow, Jira workflow, and POS/inventory safety rules
+for working on the CG_IPOS project.
+
+These instructions apply to all development tasks unless the user
+explicitly overrides a specific instruction.
+
+The primary goal is:
+
+- Preserve the existing architecture.
+- Preserve existing working functionality.
+- Reuse existing implementations whenever possible.
+- Make the smallest safe change necessary.
+- Fix root causes instead of symptoms.
+- Avoid unnecessary refactoring.
+- Validate all implementation changes.
+- Keep Jira, Git, and the local development environment consistent.
+
+---
+
+# 2. Technology Stack
+
+## Frontend
+
+- React
+- TypeScript
+- Existing project frontend libraries and patterns
+
+New frontend code MUST use TypeScript.
+
+Existing JavaScript frontend code MUST NOT be unnecessarily converted
+to TypeScript unless explicitly required by the task.
+
+---
+
+## Backend
+
+- Node.js
+- Express
+- JavaScript
+
+Follow the existing backend architecture and conventions.
+
+---
+
+## Database
+
+- MariaDB/MySQL-compatible database
+- Stored Procedures
+
+Database operations MUST follow the existing project database architecture.
+
+---
+
+# 3. Non-Negotiable Backend Architecture
+
+The required backend architecture is:
+
+Controller
+↓
+Service
+↓
+Repository
+↓
+Stored Procedure
+↓
+Database
+
+This architecture MUST NOT be bypassed merely because another approach
+may appear simpler.
+
+Each layer has a specific responsibility.
+
+---
+
+## 3.1 Controller
+
+The Controller is responsible for:
+
+- Receiving HTTP requests.
+- Reading request parameters, body, and query data.
+- Performing request-level validation where appropriate.
+- Calling the appropriate Service.
+- Returning HTTP responses.
+- Mapping service results to API responses.
+- Handling HTTP-level errors.
+
+The Controller MUST NOT:
+
+- Contain business logic.
+- Contain database queries.
+- Call the database directly.
+- Call Stored Procedures directly.
+- Contain complex processing that belongs in the Service layer.
+
+---
+
+## 3.2 Service
+
+The Service is responsible for:
+
+- Business logic.
+- Business rules.
+- Business-context validation.
+- Coordinating multiple Repository operations.
+- Application-level workflows.
+- Business-level data transformation.
+
+The Service MUST NOT:
+
+- Execute raw database queries.
+- Execute Stored Procedures directly.
+- Manage database connections.
+- Access database tables directly.
+
+All database operations MUST go through the Repository layer.
+
+---
+
+## 3.3 Repository
+
+The Repository is responsible for:
+
+- Database access.
+- Calling Stored Procedures.
+- Passing parameters to Stored Procedures.
+- Receiving database results.
+- Mapping database results where appropriate.
+
+The Repository MUST NOT:
+
+- Contain HTTP logic.
+- Access Express request/response objects.
+- Contain Controller logic.
+- Contain unrelated business logic.
+
+---
+
+# 4. Stored Procedure Rules
+
+Database operations MUST use Stored Procedures when required by the
+existing project architecture.
+
+Preferred flow:
+
+Controller
+→ Service
+→ Repository
+→ Stored Procedure
+→ Database
+
+DO NOT bypass the Stored Procedure architecture by introducing raw SQL
+into:
+
+- Controllers
+- Services
+- Routes
+- Frontend
+- Other application layers
+
+Before creating a new Stored Procedure:
+
+1. Search for an existing Stored Procedure that already performs the
+   required operation.
+2. Determine whether an existing Stored Procedure can safely be extended.
+3. Check how similar functionality is implemented.
+4. Check naming conventions.
+5. Check input/output conventions.
+6. Check dependencies and callers.
+7. Only create a new Stored Procedure when necessary.
+
+Do not create duplicate Stored Procedures.
+
+---
+
+# 5. Core Development Principles
+
+## 5.1 Inspect Before Changing
+
+Before modifying code, understand the relevant existing implementation.
+
+Do not guess how the project works.
+
+---
+
+## 5.2 Reuse Before Creating
+
+Before creating anything, search for existing functionality.
+
+Search for:
+
+- Existing files.
+- Functions.
+- Classes.
+- Components.
+- Hooks.
+- Services.
+- Repositories.
+- Stored Procedures.
+- API endpoints.
+- Types.
+- Interfaces.
+- Utilities.
+- Validation logic.
+- Tests.
+- Similar modules.
+
+Preferred order:
+
+REUSE
+→ EXTEND
+→ REFACTOR WHEN NECESSARY
+→ CREATE NEW
+
+Do not automatically create new files.
+
+---
+
+## 5.3 Preserve Existing Architecture
+
+Claude MUST follow the existing project architecture.
+
+Do not introduce a different architectural pattern simply because
+another pattern may be considered better.
+
+If an existing completed module already demonstrates the desired
+architecture, use that module as the primary implementation reference.
+
+---
+
+## 5.4 Minimal Safe Change
+
+Prefer the smallest change that correctly solves the requested problem.
+
+Do not:
+
+- Rewrite working modules unnecessarily.
+- Refactor unrelated code.
+- Rename unrelated variables.
+- Reformat unrelated files.
+- Upgrade dependencies unnecessarily.
+- Change unrelated database objects.
+- Introduce new abstractions without a clear need.
+
+---
+
+## 5.5 Root Cause Over Symptom
+
+When fixing a bug:
+
+- Identify the root cause.
+- Fix the root cause.
+- Do not simply hide the symptom.
+- Do not introduce a workaround when the underlying issue can be safely fixed.
+
+---
+
+# 6. Efficiency Rules
+
+Claude MUST avoid unnecessary token usage and unnecessary investigation.
+
+## 6.1 Do Not Over-Investigate
+
+Do not perform exhaustive project analysis when the task does not require it.
+
+For a small bug or isolated change:
+
+- Inspect only relevant files.
+- Trace only the affected flow.
+- Search only for directly related implementations.
+- Do not inspect unrelated modules.
+- Do not analyze the entire application unnecessarily.
+
+Expand investigation only when evidence shows that the problem crosses
+multiple layers or modules.
+
+---
+
+## 6.2 Do Not Over-Plan
+
+Planning requirements:
+
+### Trivial bug fix
+
+No formal implementation plan is required.
+
+Use:
+
+Understand
+→ Locate
+→ Fix
+→ Validate
+
+### Small change
+
+Use a brief implementation plan.
+
+### Medium change
+
+Use a concise implementation plan identifying affected files/layers.
+
+### New module
+
+Create a clear implementation plan before making major changes.
+
+### Major refactor
+
+Perform detailed impact analysis and validation planning.
+
+---
+
+## 6.3 Do Not Create Unnecessary Files
+
+Before creating a new file, determine whether an existing file can
+reasonably be reused or extended.
+
+Do not create duplicate:
+
+- Components
+- Hooks
+- Services
+- Repositories
+- Controllers
+- Utilities
+- Types
+- Stored Procedures
+
+---
+
+# 7. Frontend Rules
+
+New frontend code MUST use TypeScript.
+
+Existing JavaScript frontend code MUST NOT be unnecessarily converted
+to TypeScript.
+
+Before creating a new frontend component:
+
+1. Search for existing components.
+2. Search for existing hooks.
+3. Search for existing utilities.
+4. Search for existing API/service functions.
+5. Search for existing types/interfaces.
+6. Search for similar pages or modules.
+7. Reuse or extend existing functionality when possible.
+
+Frontend API communication MUST remain within the existing API/service
+layer.
+
+Components SHOULD NOT directly implement backend communication when an
+existing API/service abstraction is available.
+
+Do not introduce a new frontend pattern when an existing project pattern
+can be reused.
+
+---
+
+# 8. Type Rules
+
+When a required Type, interface, enum, or data model is missing or unclear:
+
+DO NOT GUESS.
+
+DO NOT create an arbitrary Type merely to make the code compile.
+
+First inspect:
+
+- Existing types.
+- Existing interfaces.
+- API response types.
+- Related components.
+- Related services.
+- Existing naming conventions.
+- Similar modules.
+
+If the required Type is genuinely ambiguous and choosing one could
+affect system behavior or architecture, ask the user before proceeding.
+
+---
+
+# 9. Development Modes
+
+The workflow MUST adapt to the type of task.
+
+Do not force every task through a full-stack implementation process.
+
+---
+
+# 10. BUG FIX MODE
+
+Use this mode when the user reports an existing defect, incorrect
+behavior, error, regression, or unexpected result.
+
+Preferred workflow:
+
+Understand
+→ Locate
+→ Trace
+→ Identify Root Cause
+→ Determine Affected Layer
+→ Minimal Fix
+→ Targeted Validation
+→ Fix Validation Failures
+→ Final Review
+→ Report
+
+Rules:
+
+1. Reproduce or inspect the reported behavior.
+2. Locate the affected functionality.
+3. Trace the existing execution flow.
+4. Identify the root cause before editing.
+5. Determine the minimum required layer(s) to change.
+6. Fix the root cause.
+7. Do not rewrite working functionality unnecessarily.
+8. Do not refactor unrelated code.
+9. Run targeted validation first.
+10. Run broader validation when appropriate.
+11. Fix failures caused by the implementation.
+12. Review the final diff.
+13. Report the root cause and fix.
+
+Do NOT automatically inspect or modify every layer of the system.
+
+Only investigate additional layers when the evidence indicates they
+are involved.
+
+---
+
+# 11. SMALL CHANGE MODE
+
+Use this mode for small enhancements, minor UI changes, small validation
+changes, small API changes, wording changes, or isolated behavior changes.
+
+Preferred workflow:
+
+Understand
+→ Inspect
+→ Reuse Existing Pattern
+→ Implement
+→ Validate
+→ Review
+→ Report
+
+Do not create a large implementation plan for a trivial change.
+
+---
+
+# 12. NEW MODULE MODE
+
+Use this mode when implementing a new functional module or substantial
+feature.
+
+Examples include:
+
+- Product Management
+- Supplier Management
+- Customer Management
+- Purchase Management
+- Purchase Orders
+- Inventory Management
+- Sales
+- Returns
+- Payments
+- Reports
+- User Management
+- Other substantial business modules
+
+Preferred workflow:
+
+Understand
+→ Inspect Existing Similar Module
+→ Determine Scope
+→ Plan
+→ Database
+→ Repository
+→ Service
+→ Controller/API
+→ Frontend
+→ Validation
+→ Fix
+→ Final Review
+→ Report
+
+---
+
+## 12.1 Existing Module Reference
+
+Before implementing a new module:
+
+1. Find the closest existing completed module.
+2. Study its structure.
+3. Study its naming conventions.
+4. Study its API flow.
+5. Study its Repository pattern.
+6. Study its Service pattern.
+7. Study its Controller pattern.
+8. Study its Stored Procedures.
+9. Study its frontend structure.
+10. Study its validation and error handling.
+
+Use the existing module as the structural reference.
+
+Do not invent a new architectural pattern unless the existing architecture
+cannot support the requirement.
+
+---
+
+# 13. MAJOR REFACTOR MODE
+
+Use this mode only when the requested work genuinely requires a major
+architectural or structural change.
+
+Workflow:
+
+Understand
+→ Inspect
+→ Impact Analysis
+→ Identify Dependencies
+→ Plan
+→ Implement
+→ Validate
+→ Regression Test
+→ Review
+→ Report
+
+Do not perform major refactoring merely because existing code could
+theoretically be cleaner.
+
+---
+
+# 14. Database Change Workflow
+
+Only use the database workflow when the task actually requires database
+changes.
+
+When database changes are required:
+
+1. Determine the database/environment.
+2. Confirm it is the authorized development environment.
+3. Inspect the current schema.
+4. Inspect related Stored Procedures.
+5. Inspect foreign keys.
+6. Inspect indexes.
+7. Inspect dependencies.
+8. Determine the minimum required changes.
+9. Modify/create Stored Procedures when necessary.
+10. Modify schema when necessary.
+11. Execute the required database changes in the authorized development
+    environment.
+12. Test the Stored Procedure directly.
+13. Verify returned data.
+14. Verify affected rows.
+15. Verify transaction behavior where applicable.
+16. Validate application integration.
+
+Do not provide SQL for the user to manually execute when Claude has
+explicitly been authorized to execute database changes in the development
+environment.
+
+---
+
+# 15. Database Safety Rules
+
+Never assume that a local Docker database is disposable.
+
+Before modifying the database:
+
+1. Determine the active environment.
+2. Verify that it is authorized for modification.
+3. Inspect the existing schema.
+4. Inspect dependencies.
+5. Inspect related Stored Procedures.
+6. Determine whether existing data can be affected.
+
+Never perform destructive operations unless the user explicitly
+authorizes the specific operation.
+
+Never:
+
+- Drop the database.
+- Drop unrelated tables.
+- Delete production data.
+- Delete database volumes.
+- Reset the database.
+- Truncate tables.
+
+unless the user explicitly authorizes the exact destructive operation.
+
+---
+
+# 16. POS / Inventory Safety
+
+Inventory and POS operations are business-critical.
+
+When modifying inventory-related functionality, inspect the complete
+transaction flow.
+
+Consider:
+
+- Product
+- Inventory
+- Stock quantity
+- Stock movement
+- POS transaction
+- Transaction details
+- Returns
+- Voids
+- Adjustments
+- Cancellations
+- Payment status
+- Transaction status
+- Audit/history
+
+Any operation that changes inventory MUST have a clear and traceable
+reason for the stock movement.
+
+Avoid directly changing stock quantities without following the project's
+existing inventory transaction mechanism.
+
+Never fix an inventory/POS bug by directly modifying stock quantity
+unless the existing business process explicitly requires that behavior.
+
+Use database transactions where multiple database operations must
+succeed or fail together.
+
+When fixing a POS or inventory bug, trace the complete business flow
+before changing stock, payment, transaction, or inventory logic.
+
+---
+
+# 17. Error Handling
+
+Follow existing project error-handling conventions.
+
+Do not:
+
+- Swallow errors.
+- Return meaningless errors.
+- Expose raw database errors to users.
+- Duplicate error-handling logic unnecessarily.
+
+Errors should provide enough information for debugging while maintaining
+appropriate API/client responses.
+
+---
+
+# 18. Security
+
+Never expose or commit:
+
+- Passwords
+- API keys
+- Tokens
+- Database credentials
+- Private keys
+- `.env` secrets
+- Authentication secrets
+
+Do not hardcode credentials.
+
+Do not weaken authentication or authorization merely to make a feature
+work.
+
+When modifying authentication or authorization, inspect the existing
+security flow first.
+
+---
+
+# 19. Dependencies
+
+Before adding a dependency:
+
+1. Check whether the functionality already exists.
+2. Check whether an existing dependency provides it.
+3. Check whether it can be implemented without another dependency.
+
+Do not add dependencies unnecessarily.
+
+If a new dependency is genuinely required, explain why it is necessary.
+
+---
+
+# 20. File Change Safety
+
+Keep changes focused.
+
+Do not:
+
+- Reformat unrelated files.
+- Rename unrelated variables.
+- Rewrite working modules.
+- Refactor unrelated architecture.
+- Upgrade dependencies unnecessarily.
+- Change unrelated database objects.
+- Modify unrelated frontend components.
+
+If an unrelated issue is discovered, report it rather than fixing it
+unless it directly blocks the requested task.
+
+---
+
+# 21. Existing Working-Tree Changes
+
+Before modifying files, inspect:
+
+```bash
+git status
