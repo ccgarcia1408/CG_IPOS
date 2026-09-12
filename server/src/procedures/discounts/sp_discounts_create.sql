@@ -9,6 +9,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_discounts_create`(
     IN p_Description VARCHAR(255),
     IN p_Type VARCHAR(20),
     IN p_Value DECIMAL(10,2),
+    IN p_IsDefault TINYINT,
     IN p_CreatedBy INT
 )
 BEGIN
@@ -34,8 +35,8 @@ BEGIN
     ELSE
         START TRANSACTION;
 
-        INSERT INTO discounts (Name, Description, `Type`, Value, IsDeleted, CreatedAt, CreatedBy, IsActive)
-        VALUES (TRIM(p_Name), p_Description, p_Type, p_Value, 0, NOW(), p_CreatedBy, 1);
+        INSERT INTO discounts (Name, Description, `Type`, Value, IsDefault, IsDeleted, CreatedAt, CreatedBy, IsActive)
+        VALUES (TRIM(p_Name), p_Description, p_Type, p_Value, IFNULL(p_IsDefault, 0), 0, NOW(), p_CreatedBy, 1);
 
         SET v_DiscountId = LAST_INSERT_ID();
 
@@ -43,7 +44,7 @@ BEGIN
         VALUES (
             'CREATE', 'Created discount', 'discounts', v_DiscountId,
             NULL,
-            JSON_OBJECT('Name', TRIM(p_Name), 'Type', p_Type, 'Value', p_Value),
+            JSON_OBJECT('Name', TRIM(p_Name), 'Type', p_Type, 'Value', p_Value, 'IsDefault', IFNULL(p_IsDefault, 0)),
             p_CreatedBy
         );
 

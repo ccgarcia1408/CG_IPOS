@@ -10,6 +10,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_discounts_update`(
     IN p_Description VARCHAR(255),
     IN p_Type VARCHAR(20),
     IN p_Value DECIMAL(10,2),
+    IN p_IsDefault TINYINT,
     IN p_UpdatedBy INT,
     IN p_IsActive TINYINT
 )
@@ -38,20 +39,20 @@ BEGIN
     ELSE
         START TRANSACTION;
 
-        SELECT JSON_OBJECT('Name', Name, 'Type', `Type`, 'Value', Value, 'IsActive', IsActive)
+        SELECT JSON_OBJECT('Name', Name, 'Type', `Type`, 'Value', Value, 'IsDefault', IsDefault, 'IsActive', IsActive)
         INTO v_OldValue
         FROM discounts WHERE DiscountId = p_DiscountId;
 
         UPDATE discounts
         SET Name = TRIM(p_Name), Description = p_Description, `Type` = p_Type, Value = p_Value,
-            IsActive = p_IsActive, UpdatedAt = NOW(), UpdatedBy = p_UpdatedBy
+            IsDefault = IFNULL(p_IsDefault, 0), IsActive = p_IsActive, UpdatedAt = NOW(), UpdatedBy = p_UpdatedBy
         WHERE DiscountId = p_DiscountId AND IsDeleted = 0;
 
         INSERT INTO audit_logs (ActionType, `Action`, TableName, RecordId, OldValue, NewValue, CreatedBy)
         VALUES (
             'UPDATE', 'Updated discount', 'discounts', p_DiscountId,
             v_OldValue,
-            JSON_OBJECT('Name', TRIM(p_Name), 'Type', p_Type, 'Value', p_Value, 'IsActive', p_IsActive),
+            JSON_OBJECT('Name', TRIM(p_Name), 'Type', p_Type, 'Value', p_Value, 'IsDefault', IFNULL(p_IsDefault, 0), 'IsActive', p_IsActive),
             p_UpdatedBy
         );
 

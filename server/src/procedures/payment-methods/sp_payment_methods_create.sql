@@ -7,6 +7,7 @@ DROP PROCEDURE IF EXISTS `sp_payment_methods_create`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_payment_methods_create`(
     IN p_Name VARCHAR(255),
     IN p_Description TEXT,
+    IN p_IsCash TINYINT,
     IN p_CreatedBy INT
 )
 BEGIN
@@ -27,6 +28,7 @@ BEGIN
     INSERT INTO payment_methods (
         `Name`,
         `Description`,
+        IsCash,
         IsDeleted,
         CreatedAt,
         CreatedBy,
@@ -35,6 +37,7 @@ BEGIN
     VALUES (
         p_Name,
         p_Description,
+        IFNULL(p_IsCash, 0),
         0,
         NOW(),
         p_CreatedBy,
@@ -62,6 +65,7 @@ BEGIN
         JSON_OBJECT(
             'Name', p_Name,
             'Description', p_Description,
+            'IsCash', IFNULL(p_IsCash, 0),
             'IsActive', 1
         ),
         p_CreatedBy

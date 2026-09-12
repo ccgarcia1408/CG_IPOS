@@ -21,7 +21,7 @@ const DiscountService = {
     },
 
     async createDiscount(data: any, userId: any) {
-        const { Name, Description, Type, Value } = data;
+        const { Name, Description, Type, Value, IsDefault } = data;
 
         if (!Name) {
             throw new ApiError(400, "Discount name is required.");
@@ -32,6 +32,7 @@ const DiscountService = {
             Description ?? null,
             Type ?? "PERCENTAGE",
             Value ?? 0,
+            IsDefault ?? 0,
             userId
         );
 
@@ -48,6 +49,7 @@ const DiscountService = {
             Description,
             Type,
             Value,
+            IsDefault,
             IsActive
         } = data;
 
@@ -63,6 +65,7 @@ const DiscountService = {
             Description ?? existingDiscount.Description,
             Type ?? existingDiscount.Type,
             Value ?? existingDiscount.Value,
+            IsDefault ?? existingDiscount.IsDefault,
             userId,
             IsActive ?? existingDiscount.IsActive
         );

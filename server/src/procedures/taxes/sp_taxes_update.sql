@@ -9,6 +9,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_taxes_update`(
     IN p_Name VARCHAR(100),
     IN p_Description VARCHAR(255),
     IN p_Rate DECIMAL(5,2),
+    IN p_IsDefault TINYINT,
     IN p_UpdatedBy INT,
     IN p_IsActive TINYINT
 )
@@ -33,20 +34,20 @@ BEGIN
     ELSE
         START TRANSACTION;
 
-        SELECT JSON_OBJECT('Name', Name, 'Rate', Rate, 'IsActive', IsActive)
+        SELECT JSON_OBJECT('Name', Name, 'Rate', Rate, 'IsDefault', IsDefault, 'IsActive', IsActive)
         INTO v_OldValue
         FROM taxes WHERE TaxId = p_TaxId;
 
         UPDATE taxes
         SET Name = TRIM(p_Name), Description = p_Description, Rate = p_Rate,
-            IsActive = p_IsActive, UpdatedAt = NOW(), UpdatedBy = p_UpdatedBy
+            IsDefault = IFNULL(p_IsDefault, 0), IsActive = p_IsActive, UpdatedAt = NOW(), UpdatedBy = p_UpdatedBy
         WHERE TaxId = p_TaxId AND IsDeleted = 0;
 
         INSERT INTO audit_logs (ActionType, `Action`, TableName, RecordId, OldValue, NewValue, CreatedBy)
         VALUES (
             'UPDATE', 'Updated tax', 'taxes', p_TaxId,
             v_OldValue,
-            JSON_OBJECT('Name', TRIM(p_Name), 'Rate', p_Rate, 'IsActive', p_IsActive),
+            JSON_OBJECT('Name', TRIM(p_Name), 'Rate', p_Rate, 'IsDefault', IFNULL(p_IsDefault, 0), 'IsActive', p_IsActive),
             p_UpdatedBy
         );
 

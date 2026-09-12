@@ -21,7 +21,7 @@ const PaymentMethodService = {
     },
 
     async createPaymentMethod(data: any, userId: any) {
-        const { Name, Description } = data;
+        const { Name, Description, IsCash } = data;
 
         if (!Name) {
             throw new ApiError(400, "Payment method name is required.");
@@ -30,6 +30,7 @@ const PaymentMethodService = {
         const result = await PaymentMethodModel.create(
             Name,
             Description ?? null,
+            IsCash ?? 0,
             userId
         );
 
@@ -44,6 +45,7 @@ const PaymentMethodService = {
         const {
             Name,
             Description,
+            IsCash,
             IsActive
         } = data;
 
@@ -57,6 +59,7 @@ const PaymentMethodService = {
             paymentMethodId,
             Name ?? existingPaymentMethod.Name,
             Description ?? existingPaymentMethod.Description,
+            IsCash ?? existingPaymentMethod.IsCash,
             userId,
             IsActive ?? existingPaymentMethod.IsActive
         );

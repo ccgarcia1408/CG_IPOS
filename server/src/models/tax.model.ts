@@ -18,23 +18,24 @@ const TaxModel = {
         return rows[0][0] || null;
     },
 
-    async create(name: SqlParam, description: SqlParam, rate: SqlParam, createdBy: SqlParam) {
+    async create(name: SqlParam, description: SqlParam, rate: SqlParam, isDefault: SqlParam, createdBy: SqlParam) {
         const [rows] = await pool.query<RowDataPacket[][]>(
-            `CALL sp_taxes_create(?, ?, ?, ?)`,
-            [name, description, rate, createdBy]
+            `CALL sp_taxes_create(?, ?, ?, ?, ?)`,
+            [name, description, rate, isDefault, createdBy]
         );
 
         return rows[0][0];
     },
 
-    async update(taxId: SqlParam, name: SqlParam, description: SqlParam, rate: SqlParam, updatedBy: SqlParam, isActive: SqlParam) {
+    async update(taxId: SqlParam, name: SqlParam, description: SqlParam, rate: SqlParam, isDefault: SqlParam, updatedBy: SqlParam, isActive: SqlParam) {
         const [rows] = await pool.query<RowDataPacket[][]>(
-            `CALL sp_taxes_update(?, ?, ?, ?, ?, ?)`,
+            `CALL sp_taxes_update(?, ?, ?, ?, ?, ?, ?)`,
             [
                 taxId,
                 name,
                 description,
                 rate,
+                isDefault,
                 updatedBy,
                 isActive
             ]

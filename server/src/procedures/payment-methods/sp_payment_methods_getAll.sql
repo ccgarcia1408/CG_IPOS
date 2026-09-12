@@ -9,6 +9,7 @@ BEGIN
     SELECT
 	pm.PaymentMethodId,
 	pm.Name,
+	pm.IsCash,
 	pm.Description,
 	pm.IsDeleted,
 	pm.DeletedBy,
